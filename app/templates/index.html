@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Compiler and Runner</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Code Compiler and Runner</h1>
+
+        <div class="language-selector">
+            <label for="language">Language:</label>
+            <select id="language">
+                {% for lang in languages %}
+                <option value="{{ lang }}" {% if lang==default_language %}selected{% endif %}>{{ lang|capitalize }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="timeout-selector">
+            <label for="timeout">Timeout (seconds):</label>
+            <input type="number" id="timeout" value="30" min="5" max="300" style="width: 80px;">
+        </div>
+
+        <div class="examples-selector">
+            <label for="examples">Load Example:</label>
+            <select id="examples">
+                <option value="">Select an example...</option>
+            </select>
+            <button id="load-example-btn">Load Example</button>
+        </div>
+
+        <div class="editor-container">
+            <textarea id="code-editor" placeholder="Enter your code here..."></textarea>
+        </div>
+
+        <div class="buttons">
+            <button id="compile-btn">Compile</button>
+            <button id="run-btn">Run</button>
+            <button id="compile-run-btn">Compile & Run</button>
+            <button id="cancel-btn" style="display: none; background-color: #dc3545;">Cancel</button>
+        </div>
+
+        <div class="output-container">
+            <h3>Output</h3>
+            <div id="status" class="status"></div>
+            <pre id="output"></pre>
+        </div>
+
+        <div class="config-container">
+            <h3>Configuration</h3>
+            <button id="show-config-btn">Show/Edit Config</button>
+            <div id="config-editor" style="display: none;">
+                <textarea id="config-textarea"></textarea>
+                <button id="save-config-btn">Save Config</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', path='/js/script.js') }}"></script>
+</body>
+
+</html>

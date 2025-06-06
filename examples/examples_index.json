@@ -1,0 +1,54 @@
+{
+    "python": {
+        "hello_world.py": {
+            "title": "Hello World",
+            "description": "Basic Python syntax, variables, and print statements"
+        },
+        "calculator.py": {
+            "title": "Simple Calculator",
+            "description": "Functions, parameters, and basic arithmetic operations"
+        },
+        "fibonacci.py": {
+            "title": "Fibonacci Sequence",
+            "description": "Loops, lists, and mathematical calculations"
+        },
+        "infinite_loop.py": {
+            "title": "Infinite Loop Test",
+            "description": "Test the cancel functionality - creates an infinite loop"
+        }
+    },
+    "c": {
+        "hello_world.c": {
+            "title": "Hello World",
+            "description": "Basic C syntax, variables, and printf statements"
+        },
+        "calculator.c": {
+            "title": "Simple Calculator",
+            "description": "Functions, parameters, and modular programming"
+        },
+        "infinite_loop.c": {
+            "title": "Infinite Loop Test",
+            "description": "Test the cancel functionality - creates an infinite loop"
+        }
+    },
+    "cpp": {
+        "hello_world.cpp": {
+            "title": "Hello World",
+            "description": "Basic C++ syntax, iostream, and STL containers"
+        },
+        "calculator.cpp": {
+            "title": "OOP Calculator",
+            "description": "Classes, objects, and object-oriented programming"
+        }
+    },
+    "java": {
+        "HelloWorld.java": {
+            "title": "Hello World",
+            "description": "Basic Java syntax, arrays, and string operations"
+        },
+        "Calculator.java": {
+            "title": "OOP Calculator",
+            "description": "Classes, objects, and object-oriented programming"
+        }
+    }
+}
