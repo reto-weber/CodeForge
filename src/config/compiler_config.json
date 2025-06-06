@@ -15,6 +15,10 @@
         "java": {
             "compile_cmd": "javac {file}",
             "run_cmd": "java -cp {file%/*} {classname}"
+        },
+        "eiffel": {
+            "compile_cmd": "ec -c_compile -finalize -project_path {file%/*} -target {filename%.*} -file {file}",
+            "run_cmd": "{output}"
         }
     },
     "default_language": "python"

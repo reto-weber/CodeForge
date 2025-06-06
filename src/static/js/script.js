@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded');
-    
+
     // DOM elements
     const codeEditor = document.getElementById('code-editor');
     const languageSelect = document.getElementById('language');
@@ -19,12 +19,151 @@ document.addEventListener('DOMContentLoaded', () => {
     const configTextarea = document.getElementById('config-textarea');
     const saveConfigBtn = document.getElementById('save-config-btn');
     const examplesSelect = document.getElementById('examples');
-    const loadExampleBtn = document.getElementById('load-example-btn');
-
-    console.log('Elements found:');
+    const loadExampleBtn = document.getElementById('load-example-btn'); console.log('Elements found:');
     console.log('languageSelect:', languageSelect);
     console.log('examplesSelect:', examplesSelect);
     console.log('loadExampleBtn:', loadExampleBtn);
+
+    // Verify all critical elements are available
+    if (!languageSelect) {
+        console.error('languageSelect element not found!');
+        return;
+    }
+    if (!examplesSelect) {
+        console.error('examplesSelect element not found!');
+        return;
+    }
+    if (!loadExampleBtn) {
+        console.error('loadExampleBtn element not found!');
+        return;
+    }
+
+    // CodeMirror initialization
+    let codeEditorCM = null;
+
+    // Language mode mapping for CodeMirror
+    const languageModes = {
+        'python': 'python',
+        'c': 'text/x-csrc',
+        'cpp': 'text/x-c++src',
+        'java': 'text/x-java',
+        'javascript': 'javascript',
+        'eiffel': 'text/plain'
+    };
+
+    // Initialize CodeMirror
+    function initializeCodeMirror() {
+        const currentLanguage = languageSelect.value;
+        const mode = languageModes[currentLanguage] || 'text/plain';
+
+        if (codeEditorCM) {
+            codeEditorCM.toTextArea();
+        }
+
+        codeEditorCM = CodeMirror.fromTextArea(codeEditor, {
+            mode: mode,
+            theme: 'default',
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            styleActiveLine: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "Tab": function (cm) {
+                    if (cm.somethingSelected()) {
+                        cm.indentSelection("add");
+                    } else {
+                        cm.replaceSelection("    ", "end");
+                    }
+                }
+            },
+            placeholder: "Enter your code here...",
+            viewportMargin: Infinity
+        });
+
+        // Update textarea when CodeMirror content changes
+        codeEditorCM.on('change', function (instance) {
+            instance.save();
+        });
+
+        // Setup resize handling for CodeMirror
+        setupEditorResize();
+
+        console.log('CodeMirror initialized with mode:', mode);
+    }
+
+    // Setup resize functionality for the editor
+    function setupEditorResize() {
+        const editorContainer = document.getElementById('editor-container');
+
+        if (!editorContainer || !codeEditorCM) {
+            return;
+        }
+
+        // Create a ResizeObserver to watch for container size changes
+        if (window.ResizeObserver) {
+            const resizeObserver = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    if (entry.target === editorContainer) {
+                        // Refresh CodeMirror when container is resized
+                        setTimeout(() => {
+                            if (codeEditorCM) {
+                                codeEditorCM.refresh();
+                            }
+                        }, 10);
+                    }
+                }
+            });
+
+            resizeObserver.observe(editorContainer);
+        }
+
+        // Also handle manual refresh on window resize
+        window.addEventListener('resize', () => {
+            if (codeEditorCM) {
+                setTimeout(() => {
+                    codeEditorCM.refresh();
+                }, 100);
+            }
+        });
+    }
+
+    // Function to get code content (works with both textarea and CodeMirror)
+    function getCodeContent() {
+        if (codeEditorCM) {
+            return codeEditorCM.getValue();
+        }
+        return codeEditor.value;
+    }
+
+    // Function to set code content (works with both textarea and CodeMirror)
+    function setCodeContent(content) {
+        if (codeEditorCM) {
+            codeEditorCM.setValue(content);
+        } else {
+            codeEditor.value = content;
+        }
+    }
+
+    // Function to update CodeMirror mode when language changes
+    function updateCodeMirrorMode() {
+        if (codeEditorCM) {
+            const currentLanguage = languageSelect.value;
+            const mode = languageModes[currentLanguage] || 'text/plain';
+            codeEditorCM.setOption('mode', mode);
+            console.log('CodeMirror mode updated to:', mode);
+        }
+    }
+
+    // Initialize CodeMirror when DOM is ready
+    if (typeof CodeMirror !== 'undefined') {
+        initializeCodeMirror();
+    } else {
+        console.warn('CodeMirror not available, falling back to textarea');
+    }
 
     // Variables to store compilation results and session info
     let compiledFilePath = null;
@@ -37,13 +176,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load available examples
     async function loadAvailableExamples() {
         try {
-            console.log('Loading available examples...');
+            console.log('=== loadAvailableExamples called ===');
+            console.log('Fetching /examples...');
             const response = await fetch('/examples');
-            availableExamples = await response.json();
-            console.log('Available examples loaded:', availableExamples);
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Raw response data:', data);
+
+            availableExamples = data;
+            console.log('Available examples stored:', availableExamples);
+            console.log('Available languages:', Object.keys(availableExamples));
+
+            console.log('Calling updateExamplesDropdown...');
             updateExamplesDropdown();
+            console.log('=== loadAvailableExamples complete ===');
         } catch (error) {
             console.error('Error loading examples:', error);
+            console.error('Error stack:', error.stack);
         }
     }
 
@@ -134,14 +289,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update examples dropdown based on selected language
     function updateExamplesDropdown() {
-        console.log('Updating examples dropdown...');
+        console.log('=== updateExamplesDropdown called ===');
+        console.log('availableExamples object:', availableExamples);
+        console.log('languageSelect:', languageSelect);
+        console.log('languageSelect.value:', languageSelect ? languageSelect.value : 'null');
+
+        if (!languageSelect) {
+            console.error('languageSelect is null!');
+            return;
+        }
+
         const currentLanguage = languageSelect.value;
         console.log('Current language:', currentLanguage);
         const examples = availableExamples[currentLanguage] || {};
         console.log('Examples for language:', examples);
+        console.log('Object.keys(examples):', Object.keys(examples));
+
+        if (!examplesSelect) {
+            console.error('examplesSelect is null!');
+            return;
+        }
 
         // Clear existing options
         examplesSelect.innerHTML = '<option value="">Select an example...</option>';
+        console.log('Cleared dropdown, current innerHTML:', examplesSelect.innerHTML);
 
         // Add examples for current language
         Object.keys(examples).forEach(filename => {
@@ -152,6 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
             examplesSelect.appendChild(option);
             console.log('Added option:', filename, example.title);
         });
+
+        console.log('Final dropdown innerHTML:', examplesSelect.innerHTML);
+        console.log('=== updateExamplesDropdown complete ===');
     }
 
     // Load selected example
@@ -171,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok) {
-                codeEditor.value = result.code;
+                setCodeContent(result.code);
                 updateStatus(`Loaded example: ${selectedExample}`, true);
 
                 // Reset compilation paths when loading new code
@@ -194,7 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'python': 'hello_world.py',
                 'c': 'hello_world.c',
                 'cpp': 'hello_world.cpp',
-                'java': 'HelloWorld.java'
+                'java': 'HelloWorld.java',
+                'eiffel': 'hello_world.e'
             };
 
             const defaultFile = defaultExamples[language];
@@ -205,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (response.ok) {
-                    codeEditor.value = result.code;
+                    setCodeContent(result.code);
                     return;
                 }
             }
@@ -225,15 +400,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'java':
                     placeholderCode = '// Enter your Java code here...\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}';
                     break;
+                case 'eiffel':
+                    placeholderCode = '-- Enter your Eiffel code here...\nclass\n\tHELLO_WORLD\n\ncreate\n\tmake\n\nfeature\n\tmake\n\t\t\t-- Print hello world message\n\t\tdo\n\t\t\tprint ("Hello, World!%N")\n\t\tend\n\nend';
+                    break;
                 default:
                     placeholderCode = '// Enter your code here...';
             }
 
-            codeEditor.value = placeholderCode;
+            setCodeContent(placeholderCode);
         } catch (error) {
             console.error('Error loading default example:', error);
             // Fallback to basic placeholder
-            codeEditor.value = `// Enter your ${language} code here...`;
+            setCodeContent(`// Enter your ${language} code here...`);
         }
     }
 
@@ -253,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Change example code when language changes
     languageSelect.addEventListener('change', async () => {
         console.log('Language changed to:', languageSelect.value);
+        updateCodeMirrorMode(); // Update CodeMirror syntax highlighting
         await setExampleCode(languageSelect.value);
         updateExamplesDropdown();
         // Reset compilation paths
@@ -322,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Compile code
     async function compileCode() {
-        const code = codeEditor.value;
+        const code = getCodeContent();
         const language = languageSelect.value;
 
         if (!code.trim()) {
@@ -363,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Run code
     async function runCode(useCompiled = true) {
-        const code = codeEditor.value;
+        const code = getCodeContent();
         const language = languageSelect.value;
         const timeout = parseInt(timeoutInput.value) || 30;
 
@@ -575,12 +754,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loadExample();
     });
 
-    cancelBtn.addEventListener('click', cancelExecution);
-
-    cleanupSessionBtn.addEventListener('click', cleanupSession);
+    cancelBtn.addEventListener('click', cancelExecution); cleanupSessionBtn.addEventListener('click', cleanupSession);
 
     // Initialize
-    loadAvailableExamples();
     loadSessionInfo();
 
     // Refresh session info every 30 seconds

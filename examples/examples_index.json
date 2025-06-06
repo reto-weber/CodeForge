@@ -50,5 +50,15 @@
             "title": "OOP Calculator",
             "description": "Classes, objects, and object-oriented programming"
         }
+    },
+    "eiffel": {
+        "hello_world.e": {
+            "title": "Hello World",
+            "description": "Basic Eiffel syntax, classes, and feature calls"
+        },
+        "calculator.e": {
+            "title": "Simple Calculator",
+            "description": "Local variables, arithmetic operations, and string output"
+        }
     }
 }
