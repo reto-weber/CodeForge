@@ -212,6 +212,58 @@ button:active {
     margin-bottom: 10px;
 }
 
+/* Session info section */
+.session-info {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.session-header h3 {
+    margin: 0;
+    color: #495057;
+    font-size: 16px;
+}
+
+#cleanup-session-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#cleanup-session-btn:hover {
+    background-color: #5a6268;
+}
+
+#session-details {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.container-status {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #495057;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .buttons {

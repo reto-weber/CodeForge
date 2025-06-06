@@ -2,7 +2,7 @@
     "compilers": {
         "python": {
             "compile_cmd": "",
-            "run_cmd": "python.exe {file}"
+            "run_cmd": "python3 {file}"
         },
         "c": {
             "compile_cmd": "gcc {file} -o {output} -Wall",

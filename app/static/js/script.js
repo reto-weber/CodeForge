@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelBtn = document.getElementById('cancel-btn');
     const statusEl = document.getElementById('status');
     const outputEl = document.getElementById('output');
+    const containerStatusEl = document.getElementById('container-status');
+    const sessionStatusEl = document.getElementById('session-status');
+    const cleanupSessionBtn = document.getElementById('cleanup-session-btn');
     const showConfigBtn = document.getElementById('show-config-btn');
     const configEditor = document.getElementById('config-editor');
     const configTextarea = document.getElementById('config-textarea');
@@ -16,12 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const examplesSelect = document.getElementById('examples');
     const loadExampleBtn = document.getElementById('load-example-btn');
 
-    // Variables to store compilation results
+    // Variables to store compilation results and session info
     let compiledFilePath = null;
     let compiledOutputPath = null;
     let availableExamples = {};
     let currentExecutionId = null;
     let statusCheckInterval = null;
+    let sessionInfo = null;
 
     // Load available examples
     async function loadAvailableExamples() {
@@ -31,6 +35,91 @@ document.addEventListener('DOMContentLoaded', () => {
             updateExamplesDropdown();
         } catch (error) {
             console.error('Error loading examples:', error);
+        }
+    }
+
+    // Session management functions
+    async function loadSessionInfo() {
+        try {
+            const response = await fetch('/session/info');
+            const data = await response.json();
+
+            if (data.error) {
+                sessionStatusEl.textContent = 'No active session';
+                containerStatusEl.textContent = 'No container information available';
+                return;
+            }
+
+            sessionInfo = data;
+            updateSessionDisplay();
+        } catch (error) {
+            console.error('Error loading session info:', error);
+            sessionStatusEl.textContent = 'Error loading session info';
+        }
+    }
+
+    function updateSessionDisplay() {
+        if (!sessionInfo) return;
+
+        const sessionAge = Math.round((Date.now() / 1000) - sessionInfo.session_created);
+        const lastUsed = Math.round((Date.now() / 1000) - sessionInfo.session_last_used);
+
+        sessionStatusEl.innerHTML = `
+            Session ID: ${sessionInfo.session_id.substring(0, 8)}...<br>
+            Age: ${formatDuration(sessionAge)}<br>
+            Last used: ${formatDuration(lastUsed)} ago
+        `;
+
+        if (sessionInfo.container) {
+            const containerAge = Math.round(sessionInfo.container.age_seconds);
+            containerStatusEl.innerHTML = `
+                Container Status: ${sessionInfo.container.status}<br>
+                Container Age: ${formatDuration(containerAge)}<br>
+                Container ID: ${sessionInfo.container.container_id.substring(0, 12)}...
+            `;
+        } else {
+            containerStatusEl.textContent = 'No container active (will be created on first execution)';
+        }
+    }
+
+    function formatDuration(seconds) {
+        if (seconds < 60) return `${seconds}s`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+        return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+    }
+
+    async function cleanupSession() {
+        if (!confirm('Are you sure you want to clean up the current session? This will stop any running containers.')) {
+            return;
+        }
+
+        try {
+            cleanupSessionBtn.disabled = true;
+            cleanupSessionBtn.textContent = '🔄 Cleaning...';
+
+            const formData = new FormData();
+            const response = await fetch('/session/cleanup', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                sessionStatusEl.textContent = 'Session cleaned up successfully';
+                containerStatusEl.textContent = 'No container active';
+                sessionInfo = null;
+                // Reload session info to get new session
+                setTimeout(loadSessionInfo, 1000);
+            } else {
+                alert('Failed to clean up session: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error cleaning up session:', error);
+            alert('Error cleaning up session: ' + error.message);
+        } finally {
+            cleanupSessionBtn.disabled = false;
+            cleanupSessionBtn.textContent = '🗑️ Clean Session';
         }
     }
 
@@ -329,16 +418,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         const exitCodeMsg = status.exit_code !== undefined ? ` (Exit code: ${status.exit_code})` : '';
                         updateStatus(status.message + exitCodeMsg, status.success);
                         updateOutput(status.output || '');
+
+                        // Update container status after execution
+                        containerStatusEl.innerHTML += '<br>Last execution completed in container';
                     } else {
                         updateStatus(status.message || 'Execution completed', false);
                     }
+
+                    // Refresh session info after execution completes
+                    setTimeout(loadSessionInfo, 500);
                     return;
                 }
 
                 // Still running - update status with timing info
                 const elapsed = status.elapsed_time;
                 const remaining = Math.max(0, timeout - elapsed);
-                updateStatus(`Running... (${elapsed.toFixed(1)}s elapsed, ${remaining.toFixed(1)}s remaining)`, true);
+                updateStatus(`Running in container... (${elapsed.toFixed(1)}s elapsed, ${remaining.toFixed(1)}s remaining)`, true);
 
                 // Check if we've exceeded timeout (shouldn't happen with backend timeout, but just in case)
                 if (elapsed >= timeout * 1.1) { // 10% buffer
@@ -460,4 +555,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loadExampleBtn.addEventListener('click', loadExample);
 
     cancelBtn.addEventListener('click', cancelExecution);
+
+    cleanupSessionBtn.addEventListener('click', cleanupSession);
+
+    // Initialize
+    loadAvailableExamples();
+    loadSessionInfo();
+
+    // Refresh session info every 30 seconds
+    setInterval(loadSessionInfo, 30000);
 });

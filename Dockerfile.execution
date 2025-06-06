@@ -1,0 +1,31 @@
+# Multi-stage Dockerfile for code execution environment
+FROM ubuntu:22.04
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install required compilers and runtime environments
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    gcc \
+    g++ \
+    default-jdk \
+    curl \
+    wget \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for security
+RUN useradd -m -u 1000 coderunner && \
+    mkdir -p /workspace && \
+    chown coderunner:coderunner /workspace
+
+# Set working directory
+WORKDIR /workspace
+
+# Switch to non-root user
+USER coderunner
+
+# Set default command
+CMD ["/bin/bash"]

@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code Compiler and Runner</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/favicon.svg') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', path='/favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
 </head>
 
@@ -35,6 +38,16 @@
             <button id="load-example-btn">Load Example</button>
         </div>
 
+        <div class="session-info">
+            <div class="session-header">
+                <h3>Session Info</h3>
+                <button id="cleanup-session-btn" title="Clean up container">🗑️ Clean Session</button>
+            </div>
+            <div id="session-details">
+                <span id="session-status">Loading session...</span>
+            </div>
+        </div>
+
         <div class="editor-container">
             <textarea id="code-editor" placeholder="Enter your code here..."></textarea>
         </div>
@@ -49,6 +62,7 @@
         <div class="output-container">
             <h3>Output</h3>
             <div id="status" class="status"></div>
+            <div id="container-status" class="container-status"></div>
             <pre id="output"></pre>
         </div>
 

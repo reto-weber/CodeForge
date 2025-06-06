@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="4" fill="#2563eb"/>
+  
+  <!-- Code brackets -->
+  <path d="M8 10 L5 13 L5 19 L8 22" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 10 L27 13 L27 19 L24 22" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Play/run symbol -->
+  <polygon points="14,12 14,20 20,16" fill="#ffffff"/>
+</svg>

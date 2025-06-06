@@ -27,8 +27,11 @@ A modern web-based code compiler and runner built with FastAPI that supports mul
 - GCC (for C/C++ compilation)
 - Java JDK (for Java compilation)
 - Modern web browser
+- Linux/WSL/macOS (Windows supported via WSL)
 
 ## 🔧 Installation
+
+### Quick Setup (Linux/WSL)
 
 1. **Clone the repository**:
    ```bash
@@ -36,12 +39,27 @@ A modern web-based code compiler and runner built with FastAPI that supports mul
    cd ap_online
    ```
 
-2. **Create virtual environment** (recommended):
+2. **Run automated setup**:
    ```bash
-   python -m venv venv
-   # On Windows:
-   .\activate.ps1
-   # On Linux/Mac:
+   ./setup.sh
+   ```
+
+3. **Start the application**:
+   ```bash
+   ./start.sh
+   ```
+
+### Manual Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd ap_online
+   ```
+
+2. **Create virtual environment**:
+   ```bash
+   python3 -m venv venv
    source venv/bin/activate
    ```
 
@@ -50,28 +68,56 @@ A modern web-based code compiler and runner built with FastAPI that supports mul
    pip install -r requirements.txt
    ```
 
-4. **Ensure compilers are installed**:
-   - **GCC**: Install MinGW-w64 on Windows or build-essential on Linux
-   - **Java**: Install OpenJDK or Oracle JDK
+4. **Install development tools** (Ubuntu/Debian):
+   ```bash
+   sudo apt update
+   sudo apt install build-essential default-jdk
+   ```
+
+### Docker Setup (Optional)
+
+For containerized execution:
+```bash
+./setup-docker.sh
+```
+
+## 📜 Available Scripts
+
+- `./setup.sh` - Complete project setup with dependencies
+- `./start.sh` - Quick start (handles venv activation and starts server)
+- `./setup-docker.sh` - Docker environment setup
 
 ## 🚀 Usage
 
-1. **Start the server**:
+### Quick Start
+```bash
+./start.sh
+```
+
+### Manual Start
+1. **Activate virtual environment**:
    ```bash
-   python main.py
+   source venv/bin/activate
    ```
-   
-2. **Open your browser** and navigate to:
+
+2. **Start the server**:
+   ```bash
+   python3 main.py
+   # or
+   ./start.sh
+   ```
+
+3. **Open your browser** and navigate to:
    ```
    http://localhost:8000
    ```
 
-3. **Write or select code**:
+4. **Write or select code**:
    - Choose a programming language
    - Write code in the editor or select from examples
    - Set execution timeout (5-300 seconds, default: 30s)
 
-4. **Run and control execution**:
+5. **Run and control execution**:
    - Click "Run Code" to execute
    - Use "Cancel" button to stop long-running processes
    - View real-time execution status and output
@@ -110,8 +156,9 @@ The compiler settings are stored in `config/compiler_config.json`:
 ap_online/
 ├── main.py                 # FastAPI application
 ├── requirements.txt        # Python dependencies
-├── activate.ps1           # Virtual environment activation (Windows)
-├── activate.bat           # Virtual environment activation (Windows)
+├── start.sh               # Server startup script
+├── setup.sh               # Project setup script
+├── setup-docker.sh        # Docker setup script
 ├── app/
 │   ├── static/
 │   │   ├── css/
@@ -155,12 +202,14 @@ ap_online/
 ## 🔧 Advanced Features
 
 ### Execution Control
+
 - **Non-blocking execution**: Run code without freezing the UI
 - **Real-time status**: Live updates on execution progress
 - **Cancellation**: Stop long-running or infinite loop processes
 - **Timeout handling**: Automatic termination after specified duration
 
 ### Process Management
+
 - **Background threading**: Executions run in separate threads
 - **Process tracking**: Active process monitoring and cleanup
 - **Graceful termination**: SIGTERM followed by SIGKILL if needed
@@ -176,7 +225,9 @@ ap_online/
 4. **Port conflicts**: Change the port in `main.py` if 8000 is occupied
 
 ### Debug Mode
+
 Run with debug logging:
+
 ```bash
 python main.py --debug
 ```
@@ -221,11 +272,13 @@ This project is open source. Please check the license file for details.
 
 1. Clone or download this project
 2. Install Python dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 3. Run the application:
+
 ```bash
 python main.py
 ```
@@ -249,25 +302,30 @@ python main.py
 The application includes example programs for each supported language:
 
 **Python Examples:**
+
 - Hello World: Basic syntax, variables, and print statements
 - Simple Calculator: Functions, parameters, and arithmetic operations
 - Fibonacci Sequence: Loops, lists, and mathematical calculations
 
 **C Examples:**
+
 - Hello World: Basic C syntax and printf statements
 - Simple Calculator: Functions and modular programming
 
 **C++ Examples:**
+
 - Hello World: Basic C++ syntax, iostream, and STL containers  
 - OOP Calculator: Classes, objects, and object-oriented programming
 
 **Java Examples:**
+
 - Hello World: Basic Java syntax, arrays, and string operations
 - OOP Calculator: Classes, objects, and object-oriented programming
 
 ### Configuration
 
 The application uses a JSON configuration file at `config/compiler_config.json` to define:
+
 - Compilation commands for each language
 - Execution commands for each language
 - Default language selection
@@ -313,6 +371,7 @@ To add support for a new language:
 3. Restart the application
 
 Example for adding Go support:
+
 ```json
 "go": {
     "compile_cmd": "go build -o {output} {file}",
@@ -357,6 +416,7 @@ Example for adding Go support:
 ## Development
 
 To run in development mode with auto-reload:
+
 ```bash
 uvicorn main:app --reload
 ```

@@ -192,6 +192,19 @@ Thumbs.db
 *.exe
 *.out
 
-# Virtual environment activation scripts (if you prefer not to track them)
-# activate.bat
-# activate.ps1
+# Linux/WSL specific patterns
+*.o
+*.so
+core
+a.out
+
+# Virtual environment activation scripts (cross-platform)
+# activate.bat    # Windows batch
+# activate.ps1    # Windows PowerShell
+# activate.sh     # Linux/WSL/macOS
+
+# Platform-specific executable files
+*.exe       # Windows
+*.app       # macOS
+*.deb       # Debian packages
+*.rpm       # RPM packages

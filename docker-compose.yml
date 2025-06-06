@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket for container management
+      - .:/app
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+    command: python main.py
+    depends_on:
+      - docker-setup
+    
+  # Service to build the execution image
+  docker-setup:
+    build:
+      context: .
+      dockerfile: Dockerfile.execution
+    image: code-executor:latest
+    command: /bin/true  # Just build the image and exit
+
+networks:
+  default:
+    driver: bridge

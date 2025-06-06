@@ -11,12 +11,12 @@ if [ -d "venv" ]; then
     echo "✅ Virtual environment activated"
 else
     echo "❌ Virtual environment not found!"
-    echo "Please run: python -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+    echo "Please run: ./setup.sh"
     exit 1
 fi
 
 # Check if dependencies are installed
-if python -c "import fastapi" 2>/dev/null; then
+if python3 -c "import fastapi" 2>/dev/null; then
     echo "✅ Dependencies are installed"
 else
     echo "🔄 Installing dependencies..."
@@ -28,4 +28,4 @@ echo "📂 Examples available for: Python, C, C++, Java"
 echo "🛑 Press Ctrl+C to stop the server"
 echo ""
 
-python main.py
+python3 main.py
