@@ -4,6 +4,9 @@
 echo "🚀 Starting Code Compiler and Runner..."
 echo "======================================="
 
+# Change to the parent directory (project root)
+cd "$(dirname "$0")/.."
+
 # Check if virtual environment exists
 if [ -d "venv" ]; then
     echo "✅ Virtual environment found"
@@ -11,7 +14,7 @@ if [ -d "venv" ]; then
     echo "✅ Virtual environment activated"
 else
     echo "❌ Virtual environment not found!"
-    echo "Please run: ./setup.sh"
+    echo "Please run: ./scripts/setup.sh"
     exit 1
 fi
 
@@ -28,4 +31,4 @@ echo "📂 Examples available for: Python, C, C++, Java"
 echo "🛑 Press Ctrl+C to stop the server"
 echo ""
 
-python3 main.py
+cd src && python3 main.py

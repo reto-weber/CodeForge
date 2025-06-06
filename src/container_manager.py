@@ -75,14 +75,17 @@ class ContainerManager:
     def build_execution_image(self) -> bool:
         """Build the Docker image for code execution."""
         try:
-            dockerfile_path = Path(__file__).parent / "Dockerfile.execution"
+            dockerfile_path = (
+                Path(__file__).parent.parent / "docker" / "Dockerfile.execution"
+            )
             if not dockerfile_path.exists():
                 logger.error("Dockerfile.execution not found")
                 return False
 
             logger.info("Building execution Docker image...")
+            docker_dir = Path(__file__).parent.parent / "docker"
             self.client.images.build(
-                path=str(dockerfile_path.parent),
+                path=str(docker_dir),
                 dockerfile="Dockerfile.execution",
                 tag=self.image_name,
                 rm=True,

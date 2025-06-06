@@ -6,33 +6,146 @@ import threading
 import time
 import signal
 import uuid
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
 
 from fastapi import FastAPI, Request, Form, HTTPException, Cookie
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 
-from container_manager import get_container_manager
+try:
+    from .container_manager import get_container_manager
+except ImportError:
+    # For direct execution
+    from container_manager import get_container_manager
+
+
+# Pydantic models for API documentation
+class CompileRequest(BaseModel):
+    """Request model for code compilation."""
+
+    code: str = Field(..., description="Source code to compile")
+    language: str = Field(..., description="Programming language")
+
+
+class CompileResponse(BaseModel):
+    """Response model for code compilation."""
+
+    success: bool = Field(..., description="Whether compilation succeeded")
+    message: str = Field(..., description="Compilation status message")
+    output: str = Field(..., description="Compiler output")
+    file_path: Optional[str] = Field(None, description="Path to source file")
+    output_path: Optional[str] = Field(None, description="Path to compiled output")
+
+
+class RunRequest(BaseModel):
+    """Request model for code execution."""
+
+    code: str = Field(..., description="Source code to execute")
+    language: str = Field(..., description="Programming language")
+    timeout: int = Field(30, description="Execution timeout in seconds")
+    file_path: Optional[str] = Field(None, description="Pre-compiled file path")
+    output_path: Optional[str] = Field(None, description="Pre-compiled output path")
+
+
+class RunResponse(BaseModel):
+    """Response model for code execution."""
+
+    success: bool = Field(..., description="Whether execution started successfully")
+    message: str = Field(..., description="Execution status message")
+    started: bool = Field(..., description="Whether execution process started")
+    execution_id: Optional[str] = Field(None, description="Unique execution ID")
+    output: Optional[str] = Field(None, description="Execution output (if immediate)")
+
+
+class StatusResponse(BaseModel):
+    """Response model for execution status."""
+
+    running: bool = Field(..., description="Whether execution is still running")
+    completed: bool = Field(..., description="Whether execution completed")
+    success: bool = Field(..., description="Whether execution was successful")
+    message: str = Field(..., description="Status message")
+    output: Optional[str] = Field(None, description="Execution output")
+    exit_code: Optional[int] = Field(None, description="Process exit code")
+    elapsed_time: float = Field(..., description="Elapsed time in seconds")
+
+
+class SessionInfo(BaseModel):
+    """Response model for session information."""
+
+    session_id: str = Field(..., description="Unique session identifier")
+    session_created: float = Field(..., description="Session creation timestamp")
+    session_last_used: float = Field(..., description="Last activity timestamp")
+    container: Optional[Dict[str, Any]] = Field(None, description="Container info")
+
+
+class ExampleInfo(BaseModel):
+    """Model for code example information."""
+
+    title: str = Field(..., description="Example title")
+    description: str = Field(..., description="Example description")
+    code: str = Field(..., description="Example source code")
+
 
 # Global variables for process management
 active_processes = {}
 user_sessions = {}  # Track user sessions
 process_counter = 0
 
-app = FastAPI(title="Code Compiler and Runner")
+app = FastAPI(
+    title="Code Compiler and Runner API",
+    description="""
+    A comprehensive code compilation and execution platform supporting multiple programming languages.
+    
+    ## Features
+    
+    * **Multi-language Support**: Compile and run Python, C, C++, and Java code
+    * **Docker Integration**: Secure code execution in isolated containers
+    * **Session Management**: Track user sessions and container states
+    * **Real-time Execution**: Monitor code execution with real-time status updates
+    * **Configuration Management**: Customizable compiler and runtime settings
+    * **Example Library**: Pre-built code examples for each supported language
+    
+    ## API Endpoints
+    
+    The API provides endpoints for:
+    - Code compilation and execution
+    - Session and container management
+    - Configuration management
+    - Example code loading
+    - Administrative functions
+    """,
+    version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+    contact={
+        "name": "Code Compiler API Support",
+        "url": "https://github.com/your-repo/code-compiler",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Setup templates
-templates = Jinja2Templates(directory="app/templates")
+templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+templates = Jinja2Templates(directory=templates_dir)
 
 
 # Load configuration
 def load_config():
     try:
-        with open("config/compiler_config.json", "r") as f:
+        config_path = os.path.join(
+            os.path.dirname(__file__), "config", "compiler_config.json"
+        )
+        with open(config_path, "r") as f:
             return json.load(f)
     except FileNotFoundError:
         # Default config if file doesn't exist
@@ -49,8 +162,10 @@ def load_config():
             "default_language": "python",
         }
         # Create config directory and file with default settings
-        os.makedirs("config", exist_ok=True)
-        with open("config/compiler_config.json", "w") as f:
+        config_dir = os.path.join(os.path.dirname(__file__), "config")
+        os.makedirs(config_dir, exist_ok=True)
+        config_path = os.path.join(config_dir, "compiler_config.json")
+        with open(config_path, "w") as f:
             json.dump(default_config, f, indent=4)
         return default_config
 
@@ -105,16 +220,31 @@ async def get_home(request: Request, session_id: str = Cookie(None)):
 @app.get("/favicon.ico")
 async def get_favicon():
     """Serve favicon for browsers that request it from root."""
-    favicon_path = os.path.join("app", "static", "favicon.svg")
+    favicon_path = os.path.join(os.path.dirname(__file__), "static", "favicon.svg")
     if os.path.exists(favicon_path):
         return FileResponse(favicon_path, media_type="image/svg+xml")
     else:
         raise HTTPException(status_code=404, detail="Favicon not found")
 
 
-@app.post("/compile")
-async def compile_code(code: str = Form(...), language: str = Form(...)):
-    """Compile the provided code."""
+@app.post("/compile", response_model=CompileResponse, tags=["Code Execution"])
+async def compile_code(
+    code: str = Form(..., description="Source code to compile"),
+    language: str = Form(
+        ..., description="Programming language (python, c, cpp, java)"
+    ),
+):
+    """
+    Compile source code for the specified programming language.
+
+    This endpoint compiles code for languages that require compilation (C, C++, Java).
+    For interpreted languages like Python, it simply validates the request.
+
+    - **code**: The source code to compile
+    - **language**: The programming language (python, c, cpp, java)
+
+    Returns compilation results including success status, messages, and file paths.
+    """
     if language not in CONFIG["compilers"]:
         raise HTTPException(status_code=400, detail=f"Unsupported language: {language}")
 
@@ -123,11 +253,13 @@ async def compile_code(code: str = Form(...), language: str = Form(...)):
 
     # If no compilation needed (like Python)
     if not compile_cmd:
-        return {
-            "success": True,
-            "message": "No compilation needed for this language",
-            "output": "",
-        }
+        return CompileResponse(
+            success=True,
+            message="No compilation needed for this language",
+            output="",
+            file_path=None,
+            output_path=None,
+        )
 
     # Create a temporary file for the code
     with tempfile.NamedTemporaryFile(
@@ -148,27 +280,29 @@ async def compile_code(code: str = Form(...), language: str = Form(...)):
         )
 
         if process.returncode != 0:
-            return {
-                "success": False,
-                "message": "Compilation failed",
-                "output": process.stderr or process.stdout,
-            }
+            return CompileResponse(
+                success=False,
+                message="Compilation failed",
+                output=process.stderr or process.stdout,
+                file_path=temp_file_path,
+                output_path=None,
+            )
 
-        return {
-            "success": True,
-            "message": "Compilation successful",
-            "output": process.stdout,
-            "file_path": temp_file_path,
-            "output_path": output_path,
-        }
+        return CompileResponse(
+            success=True,
+            message="Compilation successful",
+            output=process.stdout,
+            file_path=temp_file_path,
+            output_path=output_path,
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "message": f"Error during compilation: {str(e)}",
-            "output": "",
-        }
-    finally:
-        # Clean up is done in the run endpoint or after a timeout
+        return CompileResponse(
+            success=False,
+            message=f"Error during compilation: {str(e)}",
+            output="",
+            file_path=temp_file_path,
+            output_path=None,
+        )
         pass
 
 
@@ -483,7 +617,10 @@ async def update_config(config: Dict[str, Any]):
     CONFIG = config
 
     # Save to file
-    with open("config/compiler_config.json", "w") as f:
+    config_path = os.path.join(
+        os.path.dirname(__file__), "config", "compiler_config.json"
+    )
+    with open(config_path, "w") as f:
         json.dump(CONFIG, f, indent=4)
 
     return {"success": True, "message": "Configuration updated successfully"}
@@ -493,7 +630,12 @@ async def update_config(config: Dict[str, Any]):
 async def get_examples():
     """Return the list of available examples."""
     try:
-        with open("examples/examples_index.json", "r") as f:
+        examples_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            "examples",
+            "examples_index.json",
+        )
+        with open(examples_path, "r") as f:
             examples = json.load(f)
         return examples
     except FileNotFoundError:
@@ -513,10 +655,13 @@ async def get_example_code(language: str, filename: str):
             )
 
         # Construct file path
-        file_path = f"examples/{filename}"
+        examples_dir = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "examples"
+        )
+        file_path = os.path.join(examples_dir, language, filename)
 
         # Security check: ensure file is in examples directory
-        if not os.path.abspath(file_path).startswith(os.path.abspath("examples")):
+        if not os.path.abspath(file_path).startswith(os.path.abspath(examples_dir)):
             raise HTTPException(status_code=400, detail="Invalid file path")
 
         # Read the file

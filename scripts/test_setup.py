@@ -5,14 +5,20 @@ Test script for container manager functionality
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Add the src directory to the path so we can import modules
+sys.path.append(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
+)
+
 
 def test_without_docker():
     """Test the container manager imports and basic functionality without Docker."""
     try:
         from container_manager import ContainerManager
+
         print("✓ Container manager module imported successfully")
-        
+
         try:
             # This will fail if Docker is not running, which is expected
             manager = ContainerManager()
@@ -22,37 +28,41 @@ def test_without_docker():
             print(f"⚠ Docker not available: {e}")
             print("This is expected if Docker Desktop is not running.")
             return False
-            
+
     except ImportError as e:
         print(f"✗ Failed to import container manager: {e}")
         return False
+
 
 def test_main_app():
     """Test that the main app can import and run without Docker."""
     try:
         import main
+
         print("✓ Main application imports successfully")
-        
+
         # Test that we can get the container manager (will fail gracefully)
         try:
             from container_manager import get_container_manager
+
             manager = get_container_manager()
             print("✓ Container manager initialized")
         except RuntimeError:
             print("⚠ Container manager failed to initialize (Docker not running)")
-        
+
         return True
     except Exception as e:
         print(f"✗ Failed to import main application: {e}")
         return False
 
+
 if __name__ == "__main__":
     print("Testing Code Compiler and Runner - Docker Integration")
     print("=" * 50)
-    
+
     docker_available = test_without_docker()
     app_working = test_main_app()
-    
+
     print("\n" + "=" * 50)
     if docker_available:
         print("✅ All tests passed! Docker is available.")

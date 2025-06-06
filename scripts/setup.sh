@@ -4,6 +4,9 @@
 
 echo "Setting up FastAPI Code Compiler project..."
 
+# Change to the parent directory (project root)
+cd "$(dirname "$0")/.."
+
 # Check if Python 3 is installed
 if ! command -v python3 &> /dev/null; then
     echo "Python 3 is not installed. Please install Python 3 first."

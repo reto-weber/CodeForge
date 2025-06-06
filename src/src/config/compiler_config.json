@@ -1,0 +1,21 @@
+{
+    "compilers": {
+        "python": {
+            "compile_cmd": "",
+            "run_cmd": "python {file}"
+        },
+        "c": {
+            "compile_cmd": "gcc {file} -o {output}",
+            "run_cmd": "{output}"
+        },
+        "cpp": {
+            "compile_cmd": "g++ {file} -o {output}",
+            "run_cmd": "{output}"
+        },
+        "java": {
+            "compile_cmd": "javac {file}",
+            "run_cmd": "java {classname}"
+        }
+    },
+    "default_language": "python"
+}

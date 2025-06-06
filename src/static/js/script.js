@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded');
+    
     // DOM elements
     const codeEditor = document.getElementById('code-editor');
     const languageSelect = document.getElementById('language');
@@ -19,6 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const examplesSelect = document.getElementById('examples');
     const loadExampleBtn = document.getElementById('load-example-btn');
 
+    console.log('Elements found:');
+    console.log('languageSelect:', languageSelect);
+    console.log('examplesSelect:', examplesSelect);
+    console.log('loadExampleBtn:', loadExampleBtn);
+
     // Variables to store compilation results and session info
     let compiledFilePath = null;
     let compiledOutputPath = null;
@@ -30,8 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load available examples
     async function loadAvailableExamples() {
         try {
+            console.log('Loading available examples...');
             const response = await fetch('/examples');
             availableExamples = await response.json();
+            console.log('Available examples loaded:', availableExamples);
             updateExamplesDropdown();
         } catch (error) {
             console.error('Error loading examples:', error);
@@ -125,8 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update examples dropdown based on selected language
     function updateExamplesDropdown() {
+        console.log('Updating examples dropdown...');
         const currentLanguage = languageSelect.value;
+        console.log('Current language:', currentLanguage);
         const examples = availableExamples[currentLanguage] || {};
+        console.log('Examples for language:', examples);
 
         // Clear existing options
         examplesSelect.innerHTML = '<option value="">Select an example...</option>';
@@ -138,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             option.value = filename;
             option.textContent = `${example.title} - ${example.description}`;
             examplesSelect.appendChild(option);
+            console.log('Added option:', filename, example.title);
         });
     }
 
@@ -226,15 +239,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set initial example code (after examples are loaded)
     async function initializeEditor() {
+        console.log('Starting editor initialization...');
         await loadAvailableExamples();
+        console.log('Examples loaded, setting example code...');
         await setExampleCode(languageSelect.value);
+        console.log('Editor initialization complete');
     }
 
     // Initialize the editor
+    console.log('Initializing editor...');
     initializeEditor();
 
     // Change example code when language changes
     languageSelect.addEventListener('change', async () => {
+        console.log('Language changed to:', languageSelect.value);
         await setExampleCode(languageSelect.value);
         updateExamplesDropdown();
         // Reset compilation paths
@@ -552,7 +570,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveConfigBtn.addEventListener('click', saveConfig);
 
-    loadExampleBtn.addEventListener('click', loadExample);
+    loadExampleBtn.addEventListener('click', () => {
+        console.log('Load example button clicked');
+        loadExample();
+    });
 
     cancelBtn.addEventListener('click', cancelExecution);
 

@@ -41,12 +41,14 @@ A modern web-based code compiler and runner built with FastAPI that supports mul
 
 2. **Run automated setup**:
    ```bash
-   ./setup.sh
+   ./scripts/setup.sh
    ```
 
 3. **Start the application**:
    ```bash
-   ./start.sh
+   ./run.sh
+   # or
+   ./scripts/start.sh
    ```
 
 ### Manual Setup
@@ -154,29 +156,53 @@ The compiler settings are stored in `config/compiler_config.json`:
 
 ```
 ap_online/
-├── main.py                 # FastAPI application
+├── README.md                # Project documentation
+├── REFACTOR_PLAN.md        # File structure refactor documentation
 ├── requirements.txt        # Python dependencies
-├── start.sh               # Server startup script
-├── setup.sh               # Project setup script
-├── setup-docker.sh        # Docker setup script
-├── app/
-│   ├── static/
+├── run.sh                  # Convenience script to start server
+├── .gitignore             # Git ignore patterns
+├── .vscode/               # VS Code configuration
+├── src/                   # Application source code
+│   ├── __init__.py        # Python package init
+│   ├── main.py            # FastAPI application
+│   ├── container_manager.py # Docker container management
+│   ├── config/
+│   │   └── compiler_config.json # Compiler configuration
+│   ├── static/            # Static web assets
+│   │   ├── favicon.svg    # Application favicon
 │   │   ├── css/
-│   │   │   └── styles.css  # Application styling
+│   │   │   └── styles.css # Application styling
 │   │   └── js/
-│   │       └── script.js   # Frontend JavaScript
+│   │       └── script.js  # Frontend JavaScript
 │   └── templates/
-│       └── index.html      # Main HTML template
-├── config/
-│   └── compiler_config.json # Compiler configuration
-└── examples/
-    ├── examples_index.json  # Example metadata
-    ├── hello_world.py      # Python examples
-    ├── hello_world.c       # C examples
-    ├── hello_world.cpp     # C++ examples
-    ├── HelloWorld.java     # Java examples
-    ├── infinite_loop.py    # Test infinite loops
-    └── infinite_loop.c     # Test cancellation
+│       └── index.html     # Main HTML template
+├── scripts/               # Setup and utility scripts
+│   ├── setup.sh          # Project setup script
+│   ├── setup-docker.sh   # Docker setup script
+│   ├── start.sh          # Server startup script
+│   └── test_setup.py     # Setup testing script
+├── docker/               # Docker configuration
+│   ├── Dockerfile        # Main application container
+│   ├── Dockerfile.execution # Code execution container
+│   └── docker-compose.yml # Docker compose configuration
+├── examples/             # Code examples organized by language
+│   ├── examples_index.json # Example metadata
+│   ├── python/           # Python examples
+│   │   ├── hello_world.py
+│   │   ├── calculator.py
+│   │   ├── fibonacci.py
+│   │   └── infinite_loop.py
+│   ├── c/               # C examples
+│   │   ├── hello_world.c
+│   │   ├── calculator.c
+│   │   └── infinite_loop.c
+│   ├── cpp/             # C++ examples
+│   │   ├── hello_world.cpp
+│   │   └── calculator.cpp
+│   └── java/            # Java examples
+│       ├── HelloWorld.java
+│       └── Calculator.java
+└── venv/                # Virtual environment (git-ignored)
 ```
 
 ## 🔒 Security Features

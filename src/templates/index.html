@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Code Compiler | Constructor Institute</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/favicon.svg') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', path='/favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="institution-link">
+                    <a href="https://se.constructor.ch/" target="_blank" class="institution-name">Constructor Institute
+                        of Technology</a>
+                    <span class="department">Chair of Software Engineering</span>
+                </div>
+                <h1>Online Code Compiler</h1>
+                <p class="subtitle">Multi-language code execution platform for academic research</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+
+            <!-- Configuration Section -->
+            <section class="settings-section" id="settings">
+                <h2>Configuration</h2>
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <label for="language">Programming Language:</label>
+                        <select id="language">
+                            {% for lang in languages %}
+                            <option value="{{ lang }}" {% if lang==default_language %}selected{% endif %}>
+                                {{ lang|capitalize }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="timeout">Execution Timeout:</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="timeout" value="30" min="5" max="300">
+                            <span class="unit">seconds</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Examples Section -->
+            <h2>Code Examples</h2>
+            <div class="examples-controls">
+                <div class="setting-group">
+                    <label for="examples">Select Example:</label>
+                    <select id="examples">
+                        <option value="">Choose a code example...</option>
+                    </select>
+                    <button id="load-example-btn" class="btn btn-secondary">Load Example</button>
+                </div>
+            </div>
+
+            <!-- Code Editor Section -->
+            <section class="editor-section" id="editor">
+                <h2>Code Editor</h2>
+                <div class="editor-container">
+                    <textarea id="code-editor" placeholder="Enter your code here..." spellcheck="false"></textarea>
+                </div>
+
+                <div class="editor-actions">
+                    <button id="compile-btn" class="btn btn-primary">Compile</button>
+                    <button id="run-btn" class="btn btn-success">Run</button>
+                    <button id="compile-run-btn" class="btn btn-primary">Compile & Run</button>
+                    <button id="cancel-btn" class="btn btn-danger" style="display: none;">Cancel Execution</button>
+                </div>
+            </section>
+
+            <!-- Output Section -->
+            <section class="output-section">
+                <h2>Execution Results</h2>
+                <div id="status" class="status-indicator"></div>
+                <div class="output-container">
+                    <pre id="output" class="code-output"></pre>
+                </div>
+            </section>
+
+            <!-- Session Management Section -->
+            <section class="session-section" id="session">
+                <h2>Session Management</h2>
+                <div class="session-info-card">
+                    <div class="session-header">
+                        <h3>Current Session</h3>
+                        <button id="cleanup-session-btn" class="btn btn-outline" title="Clean up container">
+                            🗑️ Clean Session
+                        </button>
+                    </div>
+                    <div class="session-details">
+                        <div id="session-status" class="session-status">Loading session information...</div>
+                        <div id="container-status" class="container-status"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Advanced Configuration -->
+            <section class="config-section">
+                <h2>Advanced Configuration</h2>
+                <div class="config-controls">
+                    <button id="show-config-btn" class="btn btn-outline">Show/Edit Compiler Configuration</button>
+                </div>
+                <div id="config-editor" class="config-editor" style="display: none;">
+                    <textarea id="config-textarea" placeholder="Compiler configuration (JSON format)"></textarea>
+                    <div class="config-actions">
+                        <button id="save-config-btn" class="btn btn-primary">Save Configuration</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <p><strong>Constructor Institute of Technology</strong></p>
+                <p>Chair of Software Engineering</p>
+            </div>
+            <div class="footer-right">
+                <a href="https://se.constructor.ch/" target="_blank">SE Research Group</a>
+                <a href="/api/docs" target="_blank">API Documentation</a>
+                <a href="/api/redoc" target="_blank">ReDoc</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', path='/js/script.js') }}"></script>
+</body>
+
+</html>
