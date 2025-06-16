@@ -187,7 +187,8 @@ async def verify_code(
     # Currently only Eiffel supports verification
     if language != "eiffel":
         raise HTTPException(
-            status_code=400, detail=f"Verification not supported for language: {language}"
+            status_code=400,
+            detail=f"Verification not supported for language: {language}",
         )
 
     if CONFIG is None or language not in CONFIG.compilers:
@@ -207,9 +208,9 @@ async def verify_code(
         try:
             executor = get_executor_by_name(language, version)
             # Check if the executor supports verification
-            if not hasattr(executor, 'verify'):
+            if not hasattr(executor, "verify"):
                 raise Exception(f"Verification not supported for {language}")
-            
+
             # Use the verify method instead of execute
             success, output, exit_code = executor.verify(code, session_id, timeout)
             if execution_id in active_processes:
@@ -218,7 +219,9 @@ async def verify_code(
                 proc.success = success
                 proc.output = output
                 proc.exit_code = exit_code
-                proc.message = "Verification complete" if success else "Verification failed"
+                proc.message = (
+                    "Verification complete" if success else "Verification failed"
+                )
         except Exception as e:
             if execution_id in active_processes:
                 proc = active_processes[execution_id]

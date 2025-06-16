@@ -271,7 +271,7 @@ feature
 
 end"""
     session_client = create_session_client()
-    
+
     # Test verification endpoint
     verify_resp = session_client.post(
         "/verify",
@@ -288,9 +288,9 @@ end"""
     status_data = wait_for_execution_completion(execution_id)
 
     # Check if verification succeeded
-    assert status_data.get("success", False), (
-        f"Verification should succeed, but got: {status_data.get('output', '')}"
-    )
+    assert status_data.get(
+        "success", False
+    ), f"Verification should succeed, but got: {status_data.get('output', '')}"
     print("✅ Verification successful for 'check True'")
 
 
@@ -310,7 +310,7 @@ feature
 
 end"""
     session_client = create_session_client()
-    
+
     # Test verification endpoint
     verify_resp = session_client.post(
         "/verify",
@@ -338,7 +338,7 @@ def test_eiffel_verification_unsupported_language():
     """Test that verification endpoint rejects non-Eiffel languages."""
     code = """print("Hello, World!")"""
     session_client = create_session_client()
-    
+
     # Test verification endpoint with Python code
     verify_resp = session_client.post(
         "/verify",

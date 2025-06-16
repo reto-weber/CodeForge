@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize the editor
     console.log('Initializing editor...');
     initializeEditor();
-    
+
     // Set initial verify button visibility
     updateVerifyButtonVisibility();
 
@@ -705,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Show final results
                         const exitCodeMsg = status.exit_code !== undefined ? ` (Exit code: ${status.exit_code})` : '';
                         updateStatus(status.message + exitCodeMsg, status.success);
-                        
+
                         // Use HTML rendering for verification results
                         const isHtml = status.operation_type === 'verify';
                         updateOutput(status.output || '', isHtml);

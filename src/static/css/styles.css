@@ -554,11 +554,13 @@ input[type="number"]:hover {
 }
 
 #output table tr[style*="background-color: #dfd"] {
-    background-color: #22543d !important; /* Dark green for success */
+    background-color: #22543d !important;
+    /* Dark green for success */
 }
 
 #output table tr[style*="background-color:#fdd"] {
-    background-color: #742a2a !important; /* Dark red for errors */
+    background-color: #742a2a !important;
+    /* Dark red for errors */
 }
 
 #output table tr[style*="background-color:black"] {
@@ -566,11 +568,13 @@ input[type="number"]:hover {
 }
 
 #output table td[style*="color:blue"] {
-    color: #90cdf4 !important; /* Light blue for class names */
+    color: #90cdf4 !important;
+    /* Light blue for class names */
 }
 
 #output table td[style*="color:green"] {
-    color: #68d391 !important; /* Light green for method names */
+    color: #68d391 !important;
+    /* Light green for method names */
 }
 
 #output h1,
