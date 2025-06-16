@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Main web application
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket for container management
+      - ..:/app
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+    command: python main.py
+    depends_on:
+      - python-executor
+      - c-executor
+      - cpp-executor
+      - java-executor
+      - eiffel-executor
+    
+  # Language-specific execution environments
+  python-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    image: code-executor-python:latest
+    command: /bin/true  # Just build the image and exit
+    
+  c-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.c
+    image: code-executor-c:latest
+    command: /bin/true  # Just build the image and exit
+    
+  cpp-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpp
+    image: code-executor-cpp:latest
+    command: /bin/true  # Just build the image and exit
+    
+  java-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.java
+    image: code-executor-java:latest
+    command: /bin/true  # Just build the image and exit
+    
+  eiffel-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.eiffel
+    image: code-executor-eiffel:latest
+    command: /bin/true  # Just build the image and exit
+
+networks:
+  default:
+    driver: bridge

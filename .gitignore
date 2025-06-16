@@ -209,3 +209,4 @@ a.out
 *.app       # macOS
 *.deb       # Debian packages
 *.rpm       # RPM packages
+.VSCodeCounter

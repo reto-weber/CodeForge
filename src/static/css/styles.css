@@ -446,9 +446,30 @@ input[type="number"]:hover {
 
 .editor-actions {
     display: flex;
-    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
     margin-top: 1.5rem;
     flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.timeout-setting {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timeout-setting label {
+    font-weight: 500;
+    color: #2d3748;
+    font-size: 0.95rem;
+    white-space: nowrap;
 }
 
 /* Output Section */
@@ -502,6 +523,127 @@ input[type="number"]:hover {
     overflow-y: auto;
     margin: 0;
     min-height: 100px;
+}
+
+/* Styles for HTML content in verification output */
+#output table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    background-color: #2d3748 !important;
+}
+
+#output table th,
+#output table td {
+    border: 1px solid #4a5568 !important;
+    padding: 0.5rem;
+    text-align: left;
+    color: #e2e8f0 !important;
+    background-color: transparent !important;
+}
+
+#output table th {
+    background-color: #4a5568 !important;
+    font-weight: bold;
+    color: #ffffff !important;
+}
+
+/* Override inline styles for better readability */
+#output table tr {
+    background-color: #2d3748 !important;
+}
+
+#output table tr[style*="background-color: #dfd"] {
+    background-color: #22543d !important; /* Dark green for success */
+}
+
+#output table tr[style*="background-color:#fdd"] {
+    background-color: #742a2a !important; /* Dark red for errors */
+}
+
+#output table tr[style*="background-color:black"] {
+    background-color: #1a202c !important;
+}
+
+#output table td[style*="color:blue"] {
+    color: #90cdf4 !important; /* Light blue for class names */
+}
+
+#output table td[style*="color:green"] {
+    color: #68d391 !important; /* Light green for method names */
+}
+
+#output h1,
+#output h2,
+#output h3,
+#output h4,
+#output h5,
+#output h6 {
+    color: #90cdf4 !important;
+    margin: 1rem 0 0.5rem 0;
+}
+
+#output p {
+    margin: 0.5rem 0;
+    color: #e2e8f0 !important;
+}
+
+#output a {
+    color: #90cdf4 !important;
+    text-decoration: underline;
+}
+
+#output a:hover {
+    color: #63b3ed !important;
+}
+
+#output .success {
+    color: #68d391 !important;
+}
+
+#output .error {
+    color: #fc8181 !important;
+}
+
+#output .warning {
+    color: #fbd38d !important;
+}
+
+#output pre {
+    background-color: #2d3748 !important;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #4a5568;
+    overflow-x: auto;
+    color: #e2e8f0 !important;
+}
+
+#output code {
+    background-color: #2d3748 !important;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: #e2e8f0 !important;
+}
+
+/* Ensure all text in output is readable */
+#output * {
+    color: #e2e8f0 !important;
+}
+
+/* Strong/bold text styling */
+#output strong {
+    font-weight: bold;
+    color: #ffffff !important;
+}
+
+/* Span elements with specific colors */
+#output span[style*="color:blue"] {
+    color: #90cdf4 !important;
+}
+
+#output span[style*="color:green"] {
+    color: #68d391 !important;
 }
 
 /* Session Management */
@@ -648,6 +790,16 @@ input[type="number"]:hover {
 
     .editor-actions {
         flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .action-buttons {
+        justify-content: center;
+    }
+
+    .timeout-setting {
+        justify-content: center;
     }
 
     .footer-content {

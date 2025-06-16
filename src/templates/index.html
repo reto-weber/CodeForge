@@ -50,14 +50,6 @@
                             {% endfor %}
                         </select>
                     </div>
-
-                    <div class="setting-group">
-                        <label for="timeout">Execution Timeout:</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="timeout" value="30" min="5" max="300">
-                            <span class="unit">seconds</span>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -81,10 +73,19 @@
                 </div>
 
                 <div class="editor-actions">
-                    <button id="compile-btn" class="btn btn-primary">Compile</button>
-                    <button id="run-btn" class="btn btn-success">Run</button>
-                    <button id="compile-run-btn" class="btn btn-primary">Compile & Run</button>
-                    <button id="cancel-btn" class="btn btn-danger" style="display: none;">Cancel Execution</button>
+                    <div class="action-buttons">
+                        <button id="compile-btn" class="btn btn-primary">Compile</button>
+                        <button id="run-btn" class="btn btn-success">Run</button>
+                        <button id="verify-btn" class="btn btn-outline" style="display: none;">Verify</button>
+                        <button id="cancel-btn" class="btn btn-danger" style="display: none;">Cancel Execution</button>
+                    </div>
+                    <div class="timeout-setting">
+                        <label for="timeout">Timeout:</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="timeout" value="30" min="5" max="300">
+                            <span class="unit">seconds</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -113,20 +114,6 @@
                     </div>
                 </div>
             </section>
-
-            <!-- Advanced Configuration -->
-            <section class="config-section">
-                <h2>Advanced Configuration</h2>
-                <div class="config-controls">
-                    <button id="show-config-btn" class="btn btn-outline">Show/Edit Compiler Configuration</button>
-                </div>
-                <div id="config-editor" class="config-editor" style="display: none;">
-                    <textarea id="config-textarea" placeholder="Compiler configuration (JSON format)"></textarea>
-                    <div class="config-actions">
-                        <button id="save-config-btn" class="btn btn-primary">Save Configuration</button>
-                    </div>
-                </div>
-            </section>
         </div>
     </main>
 
@@ -150,6 +137,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/java/java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/eiffel/eiffel.min.js"></script>
     <!-- Addons -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
@@ -157,7 +146,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
 
-    <script src="{{ url_for('static', path='/js/script.js') }}"></script>
+    <!-- Application modules -->
+    <script src="{{ url_for('static', path='/js/dom-elements.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/ui-utils.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/code-editor.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/examples-manager.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/session-manager.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/code-execution.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/config-manager.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
 </body>
 
 </html>

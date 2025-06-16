@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeoutInput = document.getElementById('timeout');
     const compileBtn = document.getElementById('compile-btn');
     const runBtn = document.getElementById('run-btn');
-    const verifyBtn = document.getElementById('verify-btn');
+    const compileRunBtn = document.getElementById('compile-run-btn');
     const cancelBtn = document.getElementById('cancel-btn');
     const statusEl = document.getElementById('status');
     const outputEl = document.getElementById('output');
@@ -446,9 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize the editor
     console.log('Initializing editor...');
     initializeEditor();
-    
-    // Set initial verify button visibility
-    updateVerifyButtonVisibility();
 
     // Change example code when language changes
     languageSelect.addEventListener('change', async () => {
@@ -456,7 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCodeMirrorMode(); // Update CodeMirror syntax highlighting
         await setExampleCode(languageSelect.value);
         updateExamplesDropdown();
-        updateVerifyButtonVisibility(); // Show/hide verify button based on language
         // Reset compilation paths
         compiledFilePath = null;
         compiledOutputPath = null;
@@ -468,28 +464,18 @@ document.addEventListener('DOMContentLoaded', () => {
         statusEl.className = 'status ' + (isSuccess ? 'success' : 'error');
     }
 
-    // Show/hide verify button based on language
-    function updateVerifyButtonVisibility() {
-        const language = languageSelect.value;
-        if (language === 'eiffel') {
-            verifyBtn.style.display = 'inline-block';
-        } else {
-            verifyBtn.style.display = 'none';
-        }
-    }
-
     // Show/hide cancel button and disable/enable other buttons
     function setExecutionState(isRunning) {
         if (isRunning) {
             cancelBtn.style.display = 'inline-block';
             compileBtn.disabled = true;
             runBtn.disabled = true;
-            verifyBtn.disabled = true;
+            compileRunBtn.disabled = true;
         } else {
             cancelBtn.style.display = 'none';
             compileBtn.disabled = false;
             runBtn.disabled = false;
-            verifyBtn.disabled = false;
+            compileRunBtn.disabled = false;
             if (statusCheckInterval) {
                 clearInterval(statusCheckInterval);
                 statusCheckInterval = null;
@@ -528,12 +514,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Update output display
-    function updateOutput(text, isHtml = false) {
-        if (isHtml) {
-            outputEl.innerHTML = text || '';
-        } else {
-            outputEl.textContent = text || '';
-        }
+    function updateOutput(text) {
+        outputEl.textContent = text || '';
     }
 
     // Compile code
@@ -635,60 +617,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Verify code (Eiffel only)
-    async function verifyCode() {
-        const code = getCodeContent();
-        const language = languageSelect.value;
-        const timeout = parseInt(timeoutInput.value) || 30;
-
-        if (!code.trim()) {
-            updateStatus('Please enter some code first', false);
-            return;
-        }
-
-        if (language !== 'eiffel') {
-            updateStatus('Verification is only supported for Eiffel', false);
-            return;
-        }
-
-        setExecutionState(true);
-        updateStatus('Starting verification...', true);
-
-        try {
-            const formData = new FormData();
-            formData.append('code', code);
-            formData.append('language', language);
-            formData.append('timeout', timeout.toString());
-
-            const response = await fetch('/verify', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-            currentExecutionId = result.execution_id;
-            console.log('Verification ID:', currentExecutionId);
-
-            if (result.started) {
-                // Verification started successfully, begin status checking
-                updateStatus('Verifying with AutoProof...', true);
-                startStatusCheck(result.execution_id, timeout);
-            } else {
-                // Verification failed to start
-                updateStatus(result.message, result.success);
-                updateOutput(result.output || '');
-                setExecutionState(false);
-                currentExecutionId = null;
-            }
-
-        } catch (error) {
-            console.error('Verification error:', error);
-            updateStatus('Error during verification: ' + error.message, false);
-            setExecutionState(false);
-            currentExecutionId = null;
-        }
-    }
-
     // Start checking execution status
     function startStatusCheck(executionId, timeout) {
         statusCheckInterval = setInterval(async () => {
@@ -705,10 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Show final results
                         const exitCodeMsg = status.exit_code !== undefined ? ` (Exit code: ${status.exit_code})` : '';
                         updateStatus(status.message + exitCodeMsg, status.success);
-                        
-                        // Use HTML rendering for verification results
-                        const isHtml = status.operation_type === 'verify';
-                        updateOutput(status.output || '', isHtml);
+                        updateOutput(status.output || '');
 
                         // Update container status after execution
                         containerStatusEl.innerHTML += '<br>Last execution completed in container';
@@ -824,7 +749,13 @@ document.addEventListener('DOMContentLoaded', () => {
         runCode(false);
     });
 
-    verifyBtn.addEventListener('click', verifyCode);
+    compileRunBtn.addEventListener('click', async () => {
+        // Compile then run if successful
+        const success = await compileCode();
+        if (success) {
+            runCode(true);
+        }
+    });
 
     showConfigBtn.addEventListener('click', () => {
         if (configEditor.style.display === 'none') {

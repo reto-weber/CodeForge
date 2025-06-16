@@ -1,0 +1,49 @@
+{
+    "supported_languages": {
+        "python": {
+            "name": "Python",
+            "executor_class": "PythonExecutor",
+            "file_extension": ".py",
+            "description": "Python programming language",
+            "enabled": true
+        },
+        "c": {
+            "name": "C",
+            "executor_class": "CExecutor",
+            "file_extension": ".c",
+            "description": "C programming language",
+            "enabled": true
+        },
+        "cpp": {
+            "name": "C++",
+            "executor_class": "CppExecutor",
+            "file_extension": ".cpp",
+            "description": "C++ programming language",
+            "enabled": true
+        },
+        "java": {
+            "name": "Java",
+            "executor_class": "JavaExecutor",
+            "file_extension": ".java",
+            "description": "Java programming language",
+            "enabled": true
+        },
+        "eiffel": {
+            "name": "Eiffel",
+            "executor_class": "EiffelExecutor",
+            "file_extension": ".e",
+            "description": "Eiffel programming language",
+            "enabled": true
+        }
+    },
+    "default_language": "python",
+    "timeout_limits": {
+        "min": 5,
+        "max": 300,
+        "default": 30
+    },
+    "compiler_settings": {
+        "max_file_size": "10MB",
+        "temp_dir": "/tmp/code_execution"
+    }
+}

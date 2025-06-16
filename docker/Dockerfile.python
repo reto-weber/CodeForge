@@ -1,0 +1,28 @@
+# Alpine-based Python execution environment
+FROM python:3.11-alpine
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install system dependencies
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    linux-headers
+
+# Create a non-root user for security
+RUN adduser -D -u 1000 coderunner
+
+# Create workspace directory
+RUN mkdir -p /workspace && \
+    chown coderunner:coderunner /workspace
+
+# Set working directory
+WORKDIR /workspace
+
+# Switch to non-root user
+USER coderunner
+
+# Set default command
+CMD ["/bin/sh"]

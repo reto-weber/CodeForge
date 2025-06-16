@@ -1,0 +1,19 @@
+# Simplified Alpine-based Eiffel execution environment
+# Note: This is a minimal setup for basic Eiffel code compilation and autoproof verification.
+FROM risajef/autoproof:latest
+
+# Create a non-root user for security
+RUN useradd -m -u 1000 coderunner
+
+# Create workspace directory
+RUN mkdir -p /workspace && \
+    chown coderunner:coderunner /workspace
+
+# Set working directory
+WORKDIR /workspace
+
+# Switch to non-root user
+USER coderunner
+
+# Set default command
+CMD ["/bin/sh"]

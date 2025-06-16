@@ -1,25 +1,10 @@
 {
-    "compilers": {
-        "python": {
-            "compile_cmd": "",
-            "run_cmd": "python3 {file}"
-        },
-        "c": {
-            "compile_cmd": "gcc {file} -o {output} -Wall",
-            "run_cmd": "{output}"
-        },
-        "cpp": {
-            "compile_cmd": "g++ {file} -o {output} -Wall -std=c++14",
-            "run_cmd": "{output}"
-        },
-        "java": {
-            "compile_cmd": "javac {file}",
-            "run_cmd": "java -cp {file%/*} {classname}"
-        },
-        "eiffel": {
-            "compile_cmd": "ec -c_compile -finalize -project_path {file%/*} -target {filename%.*} -file {file}",
-            "run_cmd": "{output}"
-        }
-    },
-    "default_language": "python"
+    "compilers": [
+        "python",
+        "c",
+        "cpp",
+        "java",
+        "eiffel"
+    ],
+    "default_language": "java"
 }
