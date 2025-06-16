@@ -5,12 +5,13 @@ import time
 import uuid
 from typing import Dict, Optional
 
-from fastapi import APIRouter, Cookie, Form, HTTPException
+from fastapi import APIRouter, Cookie, Form, HTTPException, Request
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from container_manager import get_container_manager
 from language_executor.factory import get_executor_by_name
-from models import ActiveProcess, CompilerConfig, UserSession
+from models import ActiveProcess, CompilerConfig, UserSession, MultiFileRequest
 
 router = APIRouter()
 
@@ -51,25 +52,72 @@ def _safe_decode(val):
     return val or ""
 
 
+async def parse_request_data(request: Request) -> dict:
+    """Parse request data from either JSON (multi-file) or Form (legacy) format."""
+    content_type = request.headers.get("content-type", "")
+
+    if "application/json" in content_type:
+        # New multi-file format
+        try:
+            json_data = await request.json()
+            multi_file_request = MultiFileRequest(**json_data)
+            return {
+                "is_multi_file": True,
+                "language": multi_file_request.language,
+                "files": multi_file_request.files,
+                "main_file": multi_file_request.main_file,
+                "timeout": getattr(multi_file_request, "timeout", 30),
+                "file_path": getattr(multi_file_request, "file_path", None),
+                "output_path": getattr(multi_file_request, "output_path", None),
+            }
+        except (ValidationError, ValueError) as e:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid JSON request: {str(e)}"
+            )
+    else:
+        # Legacy form format - handled by FastAPI form parsing
+        return {"is_multi_file": False}
+
+
 @router.post("/compile", tags=["Code Execution"])
 async def compile_code(
-    code: str = Form(..., description="Source code to compile"),
-    language: str = Form(
-        ..., description="Programming language (python, c, cpp, java, eiffel)"
-    ),
+    request: Request,
+    code: str = Form(None, description="Source code to compile"),
+    language: str = Form(None, description="Programming language"),
     version: Optional[str] = Form(None),
     session_id: Optional[str] = Cookie(None),
 ):
-    if CONFIG is None or language not in CONFIG.compilers:
-        raise HTTPException(
-            status_code=400, detail=(f"Unsupported language: {language}")
-        )
-    session_id = get_or_create_session_id(session_id)
-    update_session_activity(session_id)
     try:
-        exec_version = version if version is not None else ""
-        executor = get_executor_by_name(language, exec_version)
-        success, output, output_path = executor.compile(code, session_id)
+        # Parse request data
+        request_data = await parse_request_data(request)
+        session_id = get_or_create_session_id(session_id)
+        update_session_activity(session_id)
+
+        if request_data["is_multi_file"]:
+            # Multi-file request
+            language = request_data["language"]
+            files = request_data["files"]
+            main_file = request_data["main_file"]
+
+            # Convert Pydantic FileInfo models to executor FileInfo objects
+            from language_executor.base import FileInfo as ExecutorFileInfo
+            file_objects = [ExecutorFileInfo(f.name, f.content) for f in files]
+            
+            # Pass all files to the executor
+            exec_version = version if version is not None else ""
+            executor = get_executor_by_name(language, exec_version)
+            success, output, output_path = executor.compile(file_objects, session_id, main_file)
+        else:
+            # Legacy form request
+            if not code or not language:
+                raise HTTPException(
+                    status_code=400, detail="Code and language are required"
+                )
+                
+            # Single file compilation (legacy)
+            exec_version = version if version is not None else ""
+            executor = get_executor_by_name(language, exec_version)
+            success, output, output_path = executor.compile(code, session_id)
 
         response_data = {
             "success": success,
@@ -102,13 +150,47 @@ async def compile_code(
 
 @router.post("/run", tags=["Code Execution"])
 async def run_code(
-    code: str = Form(...),
-    language: str = Form(...),
+    request: Request,
+    code: str = Form(None),
+    language: str = Form(None),
     timeout: int = Form(30),
     version: str = Form(None),
     session_id: str = Cookie(None),
 ):
     global PROCESS_COUNTER
+
+    # Parse request data
+    request_data = await parse_request_data(request)
+
+    if request_data["is_multi_file"]:
+        # Multi-file request
+        language = request_data["language"]
+        files = request_data["files"]
+        main_file = request_data["main_file"]
+        timeout = request_data.get("timeout", 30)
+
+        # Find the main file content
+        main_file_content = None
+        for file_info in files:
+            if file_info.name == main_file:
+                main_file_content = file_info.content
+                break
+
+        if main_file_content is None:
+            raise HTTPException(
+                status_code=400, detail=f"Main file '{main_file}' not found"
+            )
+
+        code = main_file_content
+    else:
+        # Legacy form request
+        if not code or not language:
+            raise HTTPException(
+                status_code=400, detail="Code and language are required"
+            )
+        files = None
+        main_file = None
+
     session_id = get_or_create_session_id(session_id)
     PROCESS_COUNTER += 1
     execution_id = str(PROCESS_COUNTER)
@@ -128,7 +210,18 @@ async def run_code(
     def run_in_container():
         try:
             executor = get_executor_by_name(language, version)
-            success, output, exit_code = executor.execute(code, session_id, timeout)
+            
+            if request_data["is_multi_file"]:
+                # Multi-file execution
+                from language_executor.base import FileInfo as ExecutorFileInfo
+                file_objects = [ExecutorFileInfo(f.name, f.content) for f in files]
+                success, output, exit_code = executor.execute(
+                    file_objects, session_id, timeout, main_file
+                )
+            else:
+                # Legacy single file execution
+                success, output, exit_code = executor.execute(code, session_id, timeout)
+                
             if execution_id in active_processes:
                 proc = active_processes[execution_id]
                 proc.completed = True
@@ -167,10 +260,9 @@ async def run_code(
 
 @router.post("/verify", tags=["Code Execution"])
 async def verify_code(
-    code: str = Form(..., description="Source code to verify"),
-    language: str = Form(
-        ..., description="Programming language (currently only eiffel supported)"
-    ),
+    request: Request,
+    code: str = Form(None, description="Source code to verify"),
+    language: str = Form(None, description="Programming language"),
     timeout: int = Form(30),
     version: str = Form(None),
     session_id: str = Cookie(None),
@@ -179,6 +271,37 @@ async def verify_code(
     Verify code using AutoProof (currently only supported for Eiffel).
     """
     global PROCESS_COUNTER
+
+    # Parse request data
+    request_data = await parse_request_data(request)
+
+    if request_data["is_multi_file"]:
+        # Multi-file request
+        language = request_data["language"]
+        files = request_data["files"]
+        main_file = request_data["main_file"]
+        timeout = request_data.get("timeout", 30)
+
+        # Find the main file content
+        main_file_content = None
+        for file_info in files:
+            if file_info.name == main_file:
+                main_file_content = file_info.content
+                break
+
+        if main_file_content is None:
+            raise HTTPException(
+                status_code=400, detail=f"Main file '{main_file}' not found"
+            )
+
+        code = main_file_content
+    else:
+        # Legacy form request
+        if not code or not language:
+            raise HTTPException(
+                status_code=400, detail="Code and language are required"
+            )
+
     session_id = get_or_create_session_id(session_id)
     PROCESS_COUNTER += 1
     execution_id = str(PROCESS_COUNTER)

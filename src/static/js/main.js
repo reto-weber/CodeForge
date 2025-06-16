@@ -15,15 +15,17 @@ class CodeCompilerApp {
         this.dom = new DOMElements();
         this.ui = new UIUtils(this.dom);
         this.codeEditor = new CodeEditorManager(this.dom);
+        this.fileManager = new FileManager(this.dom, this.codeEditor);
         this.examplesManager = new ExamplesManager(this.dom, this.codeEditor, this.ui);
         this.sessionManager = new SessionManager(this.dom, this.ui);
-        this.codeExecution = new CodeExecutionManager(this.dom, this.codeEditor, this.ui);
+        this.codeExecution = new CodeExecutionManager(this.dom, this.codeEditor, this.ui, this.fileManager);
         this.configManager = new ConfigManager(this.dom, this.ui, this.examplesManager);
 
         // Make managers globally available for backwards compatibility
         window.codeExecution = this.codeExecution;
         window.sessionManager = this.sessionManager;
         window.examplesManager = this.examplesManager;
+        window.fileManager = this.fileManager;
 
         console.log('All modules initialized');
     }

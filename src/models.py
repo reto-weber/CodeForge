@@ -2,9 +2,23 @@ from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
 
 
+class FileInfo(BaseModel):
+    name: str = Field(..., description="Filename with extension")
+    content: str = Field(..., description="File content")
+
+
 class CompileRequest(BaseModel):
     code: str = Field(..., description="Source code to compile")
     language: str = Field(..., description="Programming language")
+
+
+class MultiFileRequest(BaseModel):
+    language: str = Field(..., description="Programming language")
+    files: List[FileInfo] = Field(..., description="List of files")
+    main_file: str = Field(..., description="Main file to execute")
+    timeout: Optional[int] = Field(30, description="Execution timeout in seconds")
+    file_path: Optional[str] = Field(None, description="Pre-compiled file path")
+    output_path: Optional[str] = Field(None, description="Pre-compiled output path")
 
 
 class CompileResponse(BaseModel):

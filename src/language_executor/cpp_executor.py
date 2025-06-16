@@ -1,20 +1,37 @@
-from .base import LanguageExecutor
-from typing import Tuple, Optional
+from .base import LanguageExecutor, FileInfo
+from typing import Tuple, Optional, Union, List
 from container_manager import get_container_manager
 
 
 class CppExecutor(LanguageExecutor):
-    def compile(self, code: str, session_id: str) -> Tuple[bool, str, Optional[str]]:
+    def compile(
+        self, 
+        code: Union[str, List[FileInfo]], 
+        session_id: str, 
+        main_file: Optional[str] = None
+    ) -> Tuple[bool, str, Optional[str]]:
         container_mgr = get_container_manager()
-        filename = "code.cpp"
+        
         if not container_mgr.create_session_container(session_id, "cpp"):
             return False, "Failed to create compilation container", None
-        if not container_mgr.put_file_in_container(session_id, filename, code):
-            return False, "Failed to copy code to container", None
-        cmd = f"g++ {filename} -o code.out"
+
+        # Handle both legacy string and new multi-file formats
+        files, normalized_main_file = self._normalize_input(code, main_file)
+        
+        # Write all files to container
+        if not self._write_files_to_container(files, session_id):
+            return False, "Failed to copy files to container", None
+
+        # For C++, compile all .cpp files together
+        cpp_files = [f.name for f in files if f.name.endswith('.cpp')]
+        if not cpp_files:
+            return False, "No C++ source files found", None
+            
+        cmd = f"g++ {' '.join(cpp_files)} -o code.out"
         exec_result = container_mgr.run_command_in_container(session_id, cmd, 30)
         if exec_result is None:
             return False, "Failed to compile code in container", None
+            
         stdout = exec_result.output[0].decode("utf-8") if exec_result.output[0] else ""
         stderr = exec_result.output[1].decode("utf-8") if exec_result.output[1] else ""
         exit_code = exec_result.exit_code
@@ -24,15 +41,26 @@ class CppExecutor(LanguageExecutor):
         return success, output, output_path
 
     def execute(
-        self, code: str, session_id: str, timeout: int = 30
+        self, 
+        code: Union[str, List[FileInfo]], 
+        session_id: str, 
+        timeout: int = 30,
+        main_file: Optional[str] = None
     ) -> Tuple[bool, str, int]:
         container_mgr = get_container_manager()
+        
+        # For multi-file execution, write files if needed
+        if isinstance(code, list):
+            if not self._write_files_to_container(code, session_id):
+                return False, "Failed to copy files to container", -1
+        
         run_cmd = "./code.out"
         run_result = container_mgr.run_command_in_container(
             session_id, run_cmd, timeout
         )
         if run_result is None:
             return False, "Failed to execute binary in container", -1
+            
         stdout = run_result.output[0].decode("utf-8") if run_result.output[0] else ""
         stderr = run_result.output[1].decode("utf-8") if run_result.output[1] else ""
         exit_code = run_result.exit_code

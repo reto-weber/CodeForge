@@ -290,16 +290,114 @@ input[type="number"]:hover {
 }
 
 
+/* File Tabs */
+.file-tabs-container {
+    display: flex;
+    align-items: center;
+    background-color: #f7fafc;
+    border: 1px solid #cbd5e0;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    margin-top: 1.5rem;
+    overflow-x: auto;
+}
+
+.file-tabs {
+    display: flex;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.file-tab {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: #edf2f7;
+    border-right: 1px solid #cbd5e0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    max-width: 200px;
+    position: relative;
+}
+
+.file-tab:hover {
+    background-color: #e2e8f0;
+}
+
+.file-tab.active {
+    background-color: #f7fafc;
+    border-bottom: 2px solid #3182ce;
+    margin-bottom: -1px;
+}
+
+.file-tab .tab-name {
+    flex-grow: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2d3748;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 0.5rem;
+}
+
+.file-tab.active .tab-name {
+    color: #3182ce;
+}
+
+.file-tab .tab-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #718096;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.file-tab .tab-close:hover {
+    background-color: #e2e8f0;
+    color: #e53e3e;
+}
+
+.add-file-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #3182ce;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-file-btn:hover {
+    background-color: #e2e8f0;
+    color: #2c5aa0;
+}
+
 /* Code Editor */
 .editor-container {
-    margin: 1.5rem 0;
+    margin: 0 0 1.5rem 0;
     position: relative;
     min-height: 300px;
     max-height: 800px;
     resize: vertical;
     overflow: hidden;
     border: 1px solid #cbd5e0;
-    border-radius: 8px;
+    border-radius: 0 0 8px 8px;
     background-color: #f7fafc;
 }
 
@@ -819,6 +917,20 @@ input[type="number"]:hover {
 
     #code-editor {
         height: 300px;
+    }
+
+    /* Tab responsive design */
+    .file-tabs-container {
+        flex-wrap: wrap;
+    }
+
+    .file-tab {
+        min-width: 100px;
+        max-width: 150px;
+    }
+
+    .file-tab .tab-name {
+        font-size: 0.8rem;
     }
 }
 

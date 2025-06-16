@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union, List
 
 import tree_sitter_eiffel as eiffel
 from jinja2 import Template
@@ -7,7 +7,7 @@ from tree_sitter import Language, Parser, Query, QueryCursor
 
 from container_manager import get_container_manager
 
-from .base import LanguageExecutor
+from .base import LanguageExecutor, FileInfo
 
 
 class EiffelExecutor(LanguageExecutor):
@@ -114,13 +114,39 @@ class EiffelExecutor(LanguageExecutor):
 
         return True, "Code file successfully created", None
 
-    def compile(self, code: str, session_id: str) -> Tuple[bool, str, Optional[str]]:
+    def compile(
+        self, 
+        code: Union[str, List[FileInfo]], 
+        session_id: str, 
+        main_file: Optional[str] = None
+    ) -> Tuple[bool, str, Optional[str]]:
         # Extract class name and creation procedure from the code
         print(f"Compiling Eiffel code for session {session_id}")
 
+        # Handle both legacy string and new multi-file formats
+        files, normalized_main_file = self._normalize_input(code, main_file)
+        
+        # For Eiffel, we need to find the main class or use the first .e file
+        main_code = None
+        if main_file:
+            # Find the main file
+            for file_info in files:
+                if file_info.name == main_file:
+                    main_code = file_info.content
+                    break
+        else:
+            # Use the first .e file or the legacy code
+            if files:
+                main_code = files[0].content
+            else:
+                main_code = code if isinstance(code, str) else ""
+
+        if not main_code:
+            return False, "No Eiffel code found", None
+
         try:
-            class_name = self._get_class_name(code)
-            creation_procedure, has_creation = self._get_creation_procedure(code)
+            class_name = self._get_class_name(main_code)
+            creation_procedure, has_creation = self._get_creation_procedure(main_code)
 
             # Format ECF template with extracted information
             if has_creation and creation_procedure:
@@ -134,7 +160,14 @@ class EiffelExecutor(LanguageExecutor):
             # Fallback to all_classes root
             self._put_ecf_to_container(session_id)
 
-        self._put_code_to_container(session_id, code)
+        # Write all files to container
+        if isinstance(code, list):
+            if not self._write_files_to_container(files, session_id):
+                return False, "Failed to copy files to container", None
+        else:
+            # Legacy single file
+            self._put_code_to_container(session_id, code)
+            
         cmd = "apb -c_compile -batch"
         exec_result = self.container_mgr.run_command_in_container(session_id, cmd, 60)
         if exec_result is None:
@@ -144,13 +177,23 @@ class EiffelExecutor(LanguageExecutor):
         exit_code = exec_result.exit_code
         output = stdout if exit_code == 0 else (stderr or stdout)
         success = exit_code == 0
-        output_path = self._get_class_name(code) if success else None
+        output_path = self._get_class_name(main_code) if success else None
         return success, output, output_path
 
     def execute(
-        self, code: str, session_id: str, timeout: int = 60
+        self, 
+        code: Union[str, List[FileInfo]], 
+        session_id: str, 
+        timeout: int = 60,
+        main_file: Optional[str] = None
     ) -> Tuple[bool, str, int]:
         print(f"Executing Eiffel code for session {session_id}")
+        
+        # For multi-file execution, write files if needed
+        if isinstance(code, list):
+            if not self._write_files_to_container(code, session_id):
+                return False, "Failed to copy files to container", -1
+        
         run_cmd = "./EIFGENs/tests/W_code/autoproof-tests"
         run_result = self.container_mgr.run_command_in_container(
             session_id, run_cmd, timeout
@@ -165,12 +208,37 @@ class EiffelExecutor(LanguageExecutor):
         return success, output, exit_code
 
     def verify(
-        self, code: str, session_id: str, timeout: int = 60
+        self, 
+        code: Union[str, List[FileInfo]], 
+        session_id: str, 
+        timeout: int = 60,
+        main_file: Optional[str] = None
     ) -> Tuple[bool, str, int]:
+        # Handle both legacy string and new multi-file formats
+        files, normalized_main_file = self._normalize_input(code, main_file)
+        
+        # For Eiffel, we need to find the main class or use the first .e file
+        main_code = None
+        if main_file:
+            # Find the main file
+            for file_info in files:
+                if file_info.name == main_file:
+                    main_code = file_info.content
+                    break
+        else:
+            # Use the first .e file or the legacy code
+            if files:
+                main_code = files[0].content
+            else:
+                main_code = code if isinstance(code, str) else ""
+
+        if not main_code:
+            return False, "No Eiffel code found", -1
+            
         # Extract class name and creation procedure from the code
         try:
-            class_name = self._get_class_name(code)
-            creation_procedure, has_creation = self._get_creation_procedure(code)
+            class_name = self._get_class_name(main_code)
+            creation_procedure, has_creation = self._get_creation_procedure(main_code)
 
             # Format ECF template with extracted information
             if has_creation and creation_procedure:
@@ -184,7 +252,14 @@ class EiffelExecutor(LanguageExecutor):
             # Fallback to all_classes root
             self._put_ecf_to_container(session_id)
 
-        self._put_code_to_container(session_id, code)
+        # Write all files to container
+        if isinstance(code, list):
+            if not self._write_files_to_container(files, session_id):
+                return False, "Failed to copy files to container", -1
+        else:
+            # Legacy single file
+            self._put_code_to_container(session_id, code)
+            
         run_cmd = "apb -c_compile -batch -autoproof -html"
         run_result = self.container_mgr.run_command_in_container(
             session_id, run_cmd, timeout

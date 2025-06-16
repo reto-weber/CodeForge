@@ -15,6 +15,10 @@ class DOMElements {
         this.languageSelect = document.getElementById('language');
         this.timeoutInput = document.getElementById('timeout');
 
+        // File management
+        this.fileTabsContainer = document.getElementById('file-tabs');
+        this.addFileBtn = document.getElementById('add-file-btn');
+
         // Action buttons
         this.compileBtn = document.getElementById('compile-btn');
         this.runBtn = document.getElementById('run-btn');
