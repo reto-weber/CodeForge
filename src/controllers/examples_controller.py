@@ -2,6 +2,7 @@
 Examples controller.
 Handles loading and serving code examples.
 """
+
 import json
 import os
 from typing import Optional
@@ -64,7 +65,9 @@ async def get_example_code(language: str, filename: str):
         print(f"DEBUG: CONFIG is None: {CONFIG is None}")
         if CONFIG is not None:
             print(f"DEBUG: CONFIG.compilers: {CONFIG.compilers}")
-            print(f"DEBUG: language '{language}' in CONFIG.compilers: {language in CONFIG.compilers}")
+            print(
+                f"DEBUG: language '{language}' in CONFIG.compilers: {language in CONFIG.compilers}"
+            )
         if CONFIG is None or language not in CONFIG.compilers:
             raise HTTPException(
                 status_code=400, detail=f"Unsupported language: {language}"

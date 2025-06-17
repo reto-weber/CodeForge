@@ -64,7 +64,7 @@ class FileManager {
         // Add file button
         const addFileBtn = document.getElementById('add-file-btn');
         if (addFileBtn) {
-            addFileBtn.addEventListener('click', () => this.addNewFile());
+            addFileBtn.addEventListener('click', async () => { await this.addNewFile(); });
         }
 
         // File tabs container for event delegation
@@ -76,11 +76,11 @@ class FileManager {
         }
 
         // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', async (e) => {
             // Ctrl+N or Cmd+N: New file
             if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !e.shiftKey) {
                 e.preventDefault();
-                this.addNewFile();
+                await this.addNewFile();
             }
             // Ctrl+W or Cmd+W: Close current file
             else if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
@@ -194,7 +194,11 @@ class FileManager {
     closeFile(fileId) {
         if (this.files.size <= 1) {
             // Don't allow closing the last file
-            alert('Cannot close the last file. At least one file must remain open.');
+            if (window.modalManager) {
+                window.modalManager.alert('Cannot close the last file. At least one file must remain open.');
+            } else {
+                alert('Cannot close the last file. At least one file must remain open.');
+            }
             return;
         }
 
@@ -216,47 +220,53 @@ class FileManager {
         }
     }
 
-    addNewFile() {
-        const filename = this.promptForFilename();
-        if (filename) {
-            const fileId = this.createFile(filename, '', null, true);
-            return fileId;
+    async addNewFile() {
+        if (window.modalManager) {
+            const existingFiles = Array.from(this.files.values()).map(f => f.name);
+            const currentLanguage = this.dom.language.value || 'python';
+            const filename = await window.modalManager.promptFilename('', existingFiles, currentLanguage);
+            if (filename) {
+                const fileId = this.createFile(filename, '', null, true);
+                return fileId;
+            }
+        } else {
+            // fallback
+            const filename = this.promptForFilename();
+            if (filename) {
+                const fileId = this.createFile(filename, '', null, true);
+                return fileId;
+            }
         }
     }
 
-    promptForFilename() {
-        // Suggest a default filename based on current language
+    async promptForFilename() {
+        if (window.modalManager) {
+            const existingFiles = Array.from(this.files.values()).map(f => f.name);
+            const currentLanguage = this.dom.language.value || 'python';
+            return await window.modalManager.promptFilename('', existingFiles, currentLanguage);
+        }
+        // fallback to old prompt
         const currentLanguage = this.dom.language.value || 'python';
         const extension = this.getLanguageExtension(currentLanguage);
-
-        // Generate a unique filename
         let baseName = 'new_file';
         let counter = 1;
         let suggestedName = `${baseName}.${extension}`;
-
-        // Check for duplicates and increment counter if needed
         const existingFiles = Array.from(this.files.values());
         while (existingFiles.some(file => file.name === suggestedName)) {
             suggestedName = `${baseName}${counter}.${extension}`;
             counter++;
         }
-
         let filename = prompt('Enter filename:', suggestedName);
         if (!filename) return null;
-
-        // Basic validation
         filename = filename.trim();
         if (!filename) {
             alert('Filename cannot be empty.');
             return this.promptForFilename();
         }
-
-        // Check for duplicates
         if (existingFiles.some(file => file.name === filename)) {
             alert('A file with this name already exists.');
             return this.promptForFilename();
         }
-
         return filename;
     }
 
@@ -379,23 +389,26 @@ class FileManager {
         }
     }
 
-    renameFilePrompt(fileId) {
+    async renameFilePrompt(fileId) {
         if (!this.files.has(fileId)) return;
-
         const file = this.files.get(fileId);
-        const newName = prompt('Enter new filename:', file.name);
-
-        if (newName && newName.trim() && newName !== file.name) {
-            const trimmedName = newName.trim();
-
-            // Check for duplicates
-            const existingFiles = Array.from(this.files.values());
-            if (existingFiles.some(f => f.id !== fileId && f.name === trimmedName)) {
-                alert('A file with this name already exists.');
-                return;
+        const existingFiles = Array.from(this.files.values()).filter(f => f.id !== fileId).map(f => f.name);
+        if (window.modalManager) {
+            const newName = await window.modalManager.promptRename(file.name, existingFiles);
+            if (newName && newName.trim() && newName !== file.name) {
+                this.renameFile(fileId, newName.trim());
             }
-
-            this.renameFile(fileId, trimmedName);
+        } else {
+            // fallback
+            const newName = prompt('Enter new filename:', file.name);
+            if (newName && newName.trim() && newName !== file.name) {
+                const trimmedName = newName.trim();
+                if (existingFiles.includes(trimmedName)) {
+                    alert('A file with this name already exists.');
+                    return;
+                }
+                this.renameFile(fileId, trimmedName);
+            }
         }
     }
 

@@ -2,6 +2,7 @@
 Code execution controller.
 Handles compile, run, verify, cancel, and status operations.
 """
+
 import threading
 import time
 import sys
@@ -21,7 +22,7 @@ from .shared_utils import (
     get_or_create_session_id,
     update_session_activity,
     parse_request_data,
-    increment_process_counter
+    increment_process_counter,
 )
 
 router = APIRouter()
@@ -155,16 +156,16 @@ async def run_code(
     session_id = get_or_create_session_id(session_id)
     execution_id = increment_process_counter()
     update_session_activity(session_id)
-    
+
     if CONFIG is None or language not in CONFIG.compilers:
         print(f"DEBUG: CONFIG is None: {CONFIG is None}")
         if CONFIG is not None:
             print(f"DEBUG: CONFIG.compilers: {CONFIG.compilers}")
-            print(f"DEBUG: language '{language}' in CONFIG.compilers: {language in CONFIG.compilers}")
-        raise HTTPException(
-            status_code=400, detail=f"Unsupported language: {language}"
-        )
-    
+            print(
+                f"DEBUG: language '{language}' in CONFIG.compilers: {language in CONFIG.compilers}"
+            )
+        raise HTTPException(status_code=400, detail=f"Unsupported language: {language}")
+
     active_processes[execution_id] = ActiveProcess(
         session_id=session_id,
         start_time=time.time(),
@@ -367,10 +368,10 @@ async def get_execution_status(execution_id: str):
     """Get the status of a running execution."""
     if execution_id not in active_processes:
         return {"running": False, "message": "Execution not found or completed"}
-    
+
     process_info = active_processes[execution_id]
     elapsed_time = time.time() - process_info.start_time
-    
+
     if process_info.completed:
         final_result = {
             "running": False,
@@ -387,7 +388,7 @@ async def get_execution_status(execution_id: str):
         }
         del active_processes[execution_id]
         return final_result
-    
+
     return {
         "running": True,
         "completed": False,

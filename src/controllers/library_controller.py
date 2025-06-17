@@ -2,6 +2,7 @@
 Library browser controller.
 Handles Eiffel library class browsing functionality.
 """
+
 from fastapi import APIRouter, Cookie, HTTPException
 from fastapi.responses import JSONResponse
 

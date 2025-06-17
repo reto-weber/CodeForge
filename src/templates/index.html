@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Code Compiler | Constructor Institute</title>
+    <title>CodeForge | Constructor Institute</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='/favicon.svg') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', path='/favicon.svg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', path='/favicon.svg') }}">
@@ -30,7 +30,7 @@
                         of Technology</a>
                     <span class="department">Chair of Software Engineering</span>
                 </div>
-                <h1>Online Code Compiler</h1>
+                <h1>CodeForge</h1>
                 <p class="subtitle">Multi-language code execution and verification platform for academic research</p>
             </div>
         </div>
@@ -155,6 +155,63 @@
         </div>
     </footer>
 
+    <!-- Modal Dialogs -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+        <!-- File Name Input Modal -->
+        <div id="filename-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="filename-modal-title">Enter Filename</h3>
+                    <button class="modal-close" data-modal="filename-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label for="filename-input">Filename:</label>
+                        <input type="text" id="filename-input" class="modal-input" placeholder="main.py">
+                        <div class="input-hint" id="filename-hint">Enter a valid filename with extension</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="filename-cancel" class="btn btn-secondary">Cancel</button>
+                    <button id="filename-confirm" class="btn btn-primary">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirm-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="confirm-modal-title">Confirm Action</h3>
+                    <button class="modal-close" data-modal="confirm-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirm-modal-message">Are you sure you want to proceed?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-cancel" class="btn btn-secondary">Cancel</button>
+                    <button id="confirm-yes" class="btn btn-primary">Yes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Modal -->
+        <div id="alert-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="alert-modal-title">Alert</h3>
+                    <button class="modal-close" data-modal="alert-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="alert-modal-message">Alert message</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="alert-ok" class="btn btn-primary">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CodeMirror JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <!-- Language modes -->
@@ -180,6 +237,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/jump-to-line.min.js"></script>
 
     <!-- Application modules -->
+    <script src="{{ url_for('static', path='/js/modal-manager.js') }}"></script>
     <script src="{{ url_for('static', path='/js/dom-elements.js') }}"></script>
     <script src="{{ url_for('static', path='/js/ui-utils.js') }}"></script>
     <script src="{{ url_for('static', path='/js/code-editor.js') }}"></script>

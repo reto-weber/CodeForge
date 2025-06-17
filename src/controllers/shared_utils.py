@@ -1,6 +1,7 @@
 """
 Shared utilities for controllers.
 """
+
 import uuid
 import time
 from typing import Dict, Optional
