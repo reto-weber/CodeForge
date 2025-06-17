@@ -4,6 +4,38 @@ from container_manager import get_container_manager
 
 
 class CppExecutor(LanguageExecutor):
+    def _normalize_input(
+        self, code: Union[str, List[FileInfo]], main_file: Optional[str] = None
+    ) -> Tuple[List[FileInfo], str]:
+        """
+        Convert input to normalized format for C++.
+        Ensures single-file mode creates a .cpp file.
+        """
+        if isinstance(code, str):
+            # Legacy single-file mode - ensure .cpp extension
+            filename = main_file or "main.cpp"
+            if not filename.endswith(".cpp"):
+                if "." in filename:
+                    filename = filename.rsplit(".", 1)[0] + ".cpp"
+                else:
+                    filename = filename + ".cpp"
+            return [FileInfo(filename, code)], filename
+        else:
+            # Multi-file mode
+            files = code
+            if main_file:
+                return files, main_file
+            else:
+                # If no main file specified, use the first .cpp file or first file
+                cpp_files = [f for f in files if f.name.endswith(".cpp")]
+                if cpp_files:
+                    main_filename = cpp_files[0].name
+                elif files:
+                    main_filename = files[0].name
+                else:
+                    main_filename = "main.cpp"
+                return files, main_filename
+
     def compile(
         self,
         code: Union[str, List[FileInfo]],
@@ -16,7 +48,7 @@ class CppExecutor(LanguageExecutor):
             return False, "Failed to create compilation container", None
 
         # Handle both legacy string and new multi-file formats
-        files, normalized_main_file = self._normalize_input(code, main_file)
+        files, _ = self._normalize_input(code, main_file)
 
         # Write all files to container
         if not self._write_files_to_container(files, session_id):

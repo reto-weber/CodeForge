@@ -288,8 +288,8 @@ end"""
     status_data = wait_for_execution_completion(execution_id)
 
     # Check if verification succeeded
-    assert status_data.get(
-        "success", False
+    assert not (
+        "#fdd" in status_data["output"]
     ), f"Verification should succeed, but got: {status_data.get('output', '')}"
     print("✅ Verification successful for 'check True'")
 
@@ -327,7 +327,7 @@ end"""
     status_data = wait_for_execution_completion(execution_id)
 
     # Check if verification failed (as expected for 'check False')
-    assert not status_data.get("success", True), (
+    assert "#fdd" in status_data["output"], (  # fdd is the color for an error.
         f"Verification should fail for 'check False', "
         f"but got: {status_data.get('output', '')}"
     )

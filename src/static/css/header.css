@@ -1,0 +1,81 @@
+/* Constructor.ch Academic Design System - Header Styles */
+
+/* Header Styles - Constructor.ch inspired */
+.site-header {
+    background-color: #1e3a8a;
+    background: linear-gradient(135deg, #1e3a8a 0%, #02214c 100%);
+    border-bottom: 1px solid #1d4ed8;
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-section {
+    flex: 1;
+}
+
+.institution-link {
+    margin-bottom: 0.5rem;
+}
+
+.institution-name {
+    color: #dbeafe;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.institution-name:hover {
+    color: #ffffff;
+}
+
+.department {
+    color: #bfdbfe;
+    font-size: 0.85rem;
+    margin-left: 0.5rem;
+}
+
+.logo-section h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0.5rem 0 0.25rem 0;
+}
+
+.subtitle {
+    font-size: 0.95rem;
+    color: #bfdbfe;
+    font-weight: 400;
+}
+
+.main-nav {
+    display: flex;
+    gap: 2.5rem;
+}
+
+.main-nav a {
+    text-decoration: none;
+    color: #dbeafe;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.main-nav a:hover {
+    color: #ffffff;
+    border-bottom-color: #60a5fa;
+}

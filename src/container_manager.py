@@ -418,6 +418,64 @@ class ContainerManager:
         stdout = exec_result.output[0].decode(encoding) if exec_result.output[0] else ""
         return stdout
 
+    def remove_files_by_extension(self, session_id: str, extension: str) -> bool:
+        """
+        Remove all files with the specified extension from the session's container.
+        Returns True if the command executed successfully, False otherwise.
+        """
+        if session_id not in self.active_containers:
+            logger.warning("No active container for session %s", session_id)
+            return False
+
+        container = self.active_containers[session_id]["container"]
+
+        try:
+            # Use find to remove all files with the specified extension
+            # Execute through shell to properly handle redirection and error suppression
+            cmd = f"sh -c 'find /workspace -name \"*.{extension}\" -type f -delete 2>/dev/null || true'"
+
+            exec_result = container.exec_run(
+                cmd,
+                stdout=True,
+                stderr=True,
+                stream=False,
+                demux=True,
+                user="coderunner",
+                workdir="/workspace",
+            )
+
+            # Log the operation
+            logger.info(
+                "Removed files with extension '.%s' from container for session %s",
+                extension,
+                session_id,
+            )
+
+            # The command should always succeed due to '|| true', but check anyway
+            if exec_result.exit_code != 0:
+                stderr = (
+                    exec_result.output[1].decode("utf-8")
+                    if exec_result.output[1]
+                    else ""
+                )
+                logger.warning(
+                    "Non-zero exit code when removing .%s files from session %s: %s",
+                    extension,
+                    session_id,
+                    stderr,
+                )
+
+            return True
+
+        except Exception as e:
+            logger.error(
+                "Failed to remove files with extension '.%s' from container for session %s: %s",
+                extension,
+                session_id,
+                e,
+            )
+            return False
+
     def cleanup_all_code_containers(self) -> int:
         """Clean up all code execution containers (startup/shutdown cleanup)."""
         cleaned_count = 0

@@ -11,7 +11,11 @@ class UIUtils {
     // Update status display
     updateStatus(message, isSuccess) {
         this.dom.status.textContent = message;
-        this.dom.status.className = 'status ' + (isSuccess ? 'success' : 'error');
+        this.dom.status.className = 'status-indicator ' + (isSuccess ? 'success' : 'error');
+        this.dom.status.style.display = 'block';
+
+        // Update output section visibility
+        this.updateOutputSectionVisibility();
     }
 
     // Update output display
@@ -21,6 +25,56 @@ class UIUtils {
         } else {
             this.dom.output.textContent = text || '';
         }
+
+        // Update output section visibility based on current content and status
+        this.updateOutputSectionVisibility();
+    }
+
+    // Update output section visibility based on current content and status
+    updateOutputSectionVisibility() {
+        const hasContent = this.dom.output && (
+            (this.dom.output.textContent && this.dom.output.textContent.trim()) ||
+            (this.dom.output.innerHTML && this.dom.output.innerHTML.trim())
+        );
+        const hasStatus = this.dom.status && this.dom.status.textContent && this.dom.status.textContent.trim();
+
+        if (hasContent || hasStatus) {
+            this.showOutputSection();
+        } else {
+            this.hideOutputSection();
+        }
+    }
+
+    // Show the output section
+    showOutputSection() {
+        if (this.dom.outputSection) {
+            this.dom.outputSection.style.display = 'block';
+        }
+    }
+
+    // Hide the output section
+    hideOutputSection() {
+        if (this.dom.outputSection) {
+            // Add a fade-out effect before hiding
+            this.dom.outputSection.style.opacity = '0';
+            this.dom.outputSection.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                this.dom.outputSection.style.display = 'none';
+                // Reset for next show
+                this.dom.outputSection.style.opacity = '';
+                this.dom.outputSection.style.transform = '';
+            }, 200);
+        }
+    }
+
+    // Clear output and hide section
+    clearOutput() {
+        this.dom.output.textContent = '';
+        this.dom.output.innerHTML = '';
+        // Also clear status when closing output
+        this.dom.status.style.display = 'none';
+        this.dom.status.textContent = '';
+        this.hideOutputSection();
     }
 
     // Show/hide cancel button and disable/enable other buttons

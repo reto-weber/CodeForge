@@ -1,0 +1,46 @@
+/* Constructor.ch Academic Design System - CodeMirror Styles */
+
+/* CodeMirror Integration */
+.CodeMirror {
+    height: 100% !important;
+    border: none;
+    border-radius: 8px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    background-color: transparent;
+}
+
+.editor-container:focus-within {
+    border-color: #3182ce;
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.CodeMirror-focused {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.CodeMirror-scroll {
+    padding: 1.25rem;
+}
+
+.CodeMirror-gutters {
+    background-color: #edf2f7;
+    border-right: 1px solid #cbd5e0;
+}
+
+.CodeMirror-linenumber {
+    color: #718096;
+    padding: 0 8px 0 0;
+    min-width: 20px;
+}
+
+.CodeMirror-activeline-background {
+    background-color: rgba(49, 130, 206, 0.1);
+}
+
+/* Hide original textarea when CodeMirror is active */
+#code-editor.cm-hidden {
+    display: none;
+}

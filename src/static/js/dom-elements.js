@@ -28,11 +28,9 @@ class DOMElements {
         // Status and output
         this.statusEl = document.getElementById('status');
         this.outputEl = document.getElementById('output');
+        this.outputSection = document.getElementById('output-section');
+        this.closeOutputBtn = document.getElementById('close-output-btn');
         this.containerStatusEl = document.getElementById('container-status');
-        this.sessionStatusEl = document.getElementById('session-status');
-
-        // Session management
-        this.cleanupSessionBtn = document.getElementById('cleanup-session-btn');
 
         // Configuration (optional elements)
         this.showConfigBtn = document.getElementById('show-config-btn');

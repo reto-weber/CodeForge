@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional, List, Union
+from container_manager import get_container_manager
 
 
 class FileInfo:
@@ -56,13 +57,25 @@ class LanguageExecutor(ABC):
 
     def _write_files_to_container(self, files: List[FileInfo], session_id: str) -> bool:
         """
-        Helper method to write multiple files to the container.
+        Helper method to remove all files with the same ending as those in files,
+        then write multiple files to the container.
         Returns True if all files were written successfully.
         """
-        from container_manager import get_container_manager
 
         container_mgr = get_container_manager()
 
+        # Collect unique file extensions
+        extensions = set()
+        for file_info in files:
+            if "." in file_info.name:
+                ext = file_info.name.rsplit(".", 1)[1]
+                extensions.add(ext)
+
+        # Remove all files in the container with matching extensions
+        for ext in extensions:
+            container_mgr.remove_files_by_extension(session_id, ext)
+
+        # Write files to container
         for file_info in files:
             if not container_mgr.put_file_in_container(
                 session_id, file_info.name, file_info.content

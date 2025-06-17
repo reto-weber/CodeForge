@@ -31,7 +31,7 @@
                     <span class="department">Chair of Software Engineering</span>
                 </div>
                 <h1>Online Code Compiler</h1>
-                <p class="subtitle">Multi-language code execution platform for academic research</p>
+                <p class="subtitle">Multi-language code execution and verification platform for academic research</p>
             </div>
         </div>
     </header>
@@ -39,9 +39,8 @@
     <main class="main-content">
         <div class="container">
 
-            <!-- Configuration Section -->
+            <!-- Configuration and Examples Section -->
             <section class="settings-section" id="settings">
-                <h2>Configuration</h2>
                 <div class="settings-grid">
                     <div class="setting-group">
                         <label for="language">Programming Language:</label>
@@ -53,24 +52,20 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="setting-group">
+                        <label for="examples">Select Example:</label>
+                        <div class="examples-input-group">
+                            <select id="examples">
+                                <option value="">Choose a code example...</option>
+                            </select>
+                            <button id="load-example-btn" class="btn btn-secondary">Load Example</button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <!-- Examples Section -->
-            <h2>Code Examples</h2>
-            <div class="examples-controls">
-                <div class="setting-group">
-                    <label for="examples">Select Example:</label>
-                    <select id="examples">
-                        <option value="">Choose a code example...</option>
-                    </select>
-                    <button id="load-example-btn" class="btn btn-secondary">Load Example</button>
-                </div>
-            </div>
-
             <!-- Code Editor Section -->
             <section class="editor-section" id="editor">
-                <h2>Code Editor</h2>
 
                 <!-- File Tabs -->
                 <div class="file-tabs-container">
@@ -102,8 +97,11 @@
             </section>
 
             <!-- Output Section -->
-            <section class="output-section">
-                <h2>Execution Results</h2>
+            <section class="output-section" id="output-section" style="display: none;">
+                <div class="output-header">
+                    <h2>Execution Results</h2>
+                    <button id="close-output-btn" class="btn-close" title="Close output">×</button>
+                </div>
                 <div id="status" class="status-indicator"></div>
                 <div class="output-container">
                     <pre id="output" class="code-output"></pre>
@@ -137,23 +135,6 @@
                     <div class="library-output-container">
                         <div id="library-status" class="status-indicator"></div>
                         <pre id="library-output" class="code-output library-code"></pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Session Management Section -->
-            <section class="session-section" id="session">
-                <h2>Session Management</h2>
-                <div class="session-info-card">
-                    <div class="session-header">
-                        <h3>Current Session</h3>
-                        <button id="cleanup-session-btn" class="btn btn-outline" title="Clean up container">
-                            🗑️ Clean Session
-                        </button>
-                    </div>
-                    <div class="session-details">
-                        <div id="session-status" class="session-status">Loading session information...</div>
-                        <div id="container-status" class="container-status"></div>
                     </div>
                 </div>
             </section>
@@ -204,7 +185,6 @@
     <script src="{{ url_for('static', path='/js/code-editor.js') }}"></script>
     <script src="{{ url_for('static', path='/js/file-manager.js') }}"></script>
     <script src="{{ url_for('static', path='/js/examples-manager.js') }}"></script>
-    <script src="{{ url_for('static', path='/js/session-manager.js') }}"></script>
     <script src="{{ url_for('static', path='/js/code-execution.js') }}"></script>
     <script src="{{ url_for('static', path='/js/config-manager.js') }}"></script>
     <script src="{{ url_for('static', path='/js/main.js') }}"></script>

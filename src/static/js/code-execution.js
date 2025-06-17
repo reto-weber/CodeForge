@@ -31,14 +31,14 @@ class CodeExecutionManager {
             // Multi-file support
             this.fileManager.saveCurrentFile();
             const files = this.fileManager.getAllFiles();
-            
+
             if (files.length === 0) {
                 this.ui.updateStatus('No files available', false);
                 return null;
             }
 
             const language = this.dom.language.value;
-            
+
             return {
                 language: language,
                 files: files.map(file => ({
@@ -203,13 +203,12 @@ class CodeExecutionManager {
                         const isHtml = status.operation_type === 'verify';
                         this.ui.updateOutput(status.output || '', isHtml);
 
-                        this.dom.containerStatusEl.innerHTML += '<br>Last execution completed in container';
+                        // Update container status if element exists
+                        if (this.dom.containerStatusEl) {
+                            this.dom.containerStatusEl.innerHTML += '<br>Last execution completed in container';
+                        }
                     } else {
                         this.ui.updateStatus(status.message || 'Execution completed', false);
-                    }
-
-                    if (window.sessionManager) {
-                        setTimeout(() => window.sessionManager.loadSessionInfo(), 500);
                     }
 
                     if (this.statusCheckInterval) {

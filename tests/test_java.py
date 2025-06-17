@@ -32,6 +32,8 @@ public class HelloWorld {
         "/run",
         data={"language": "java", "code": java_code},
     )
+    print(f"Run response status: {run_resp.status_code}")
+    print(f"Run response content: {run_resp.text}")
     assert run_resp.status_code == 200
     run_data = run_resp.json()
     assert run_data["success"]

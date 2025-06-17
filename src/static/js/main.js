@@ -17,14 +17,12 @@ class CodeCompilerApp {
         this.codeEditor = new CodeEditorManager(this.dom);
         this.fileManager = new FileManager(this.dom, this.codeEditor);
         this.examplesManager = new ExamplesManager(this.dom, this.codeEditor, this.ui);
-        this.sessionManager = new SessionManager(this.dom, this.ui);
         this.codeExecution = new CodeExecutionManager(this.dom, this.codeEditor, this.ui, this.fileManager);
         this.configManager = new ConfigManager(this.dom, this.ui, this.examplesManager);
         this.libraryBrowser = new EiffelLibraryBrowser();
 
         // Make managers globally available for backwards compatibility
         window.codeExecution = this.codeExecution;
-        window.sessionManager = this.sessionManager;
         window.examplesManager = this.examplesManager;
         window.fileManager = this.fileManager;
         window.libraryBrowser = this.libraryBrowser;
@@ -86,9 +84,25 @@ class CodeCompilerApp {
             });
         }
 
-        // Session management
-        this.dom.cleanupSessionBtn.addEventListener('click', () => {
-            this.sessionManager.cleanupSession();
+        // Output section close button
+        if (this.dom.closeOutputBtn) {
+            this.dom.closeOutputBtn.addEventListener('click', () => {
+                this.ui.clearOutput();
+            });
+        }
+
+        // Add keyboard shortcut to close output (Escape key)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.dom.outputSection && this.dom.outputSection.style.display !== 'none') {
+                this.ui.clearOutput();
+            }
+        });
+
+        // Keyboard shortcut to close output (Escape key)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.dom.outputSection && this.dom.outputSection.style.display !== 'none') {
+                this.ui.clearOutput();
+            }
         });
 
         console.log('Event listeners set up');
@@ -112,9 +126,6 @@ class CodeCompilerApp {
 
         // Set initial library browser visibility
         this.updateLibraryBrowserVisibility(this.dom.language.value);
-
-        // Start session management
-        this.sessionManager.startAutoRefresh();
 
         console.log('Application initialization complete');
     }

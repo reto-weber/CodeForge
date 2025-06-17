@@ -1,0 +1,83 @@
+/* Constructor.ch Academic Design System - Layout and Section Styles */
+
+/* Main Content Layout */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem 2rem;
+}
+
+.container {
+    width: 100%;
+}
+
+/* Section Styles */
+section {
+    margin: 1rem 0;
+    padding: 0.5rem 0;
+}
+
+section:not(.welcome-section) {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+section:last-child {
+    border-bottom: none;
+}
+
+section h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #3182ce;
+    display: inline-block;
+}
+
+/* Welcome Section */
+.welcome-section {
+    padding: 3rem 0 4rem 0;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    margin: 0 -2rem 3rem -2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.welcome-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card h3 {
+    color: #3182ce;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: #4a5568;
+    line-height: 1.6;
+}

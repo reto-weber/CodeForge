@@ -201,10 +201,10 @@ class EiffelExecutor(LanguageExecutor):
         if run_result is None:
             return False, "Failed to execute binary in container", -1
         stdout = run_result.output[0].decode("utf-8") if run_result.output[0] else ""
-        # stderr = run_result.output[1].decode("utf-8") if run_result.output[1] else ""
+        stderr = run_result.output[1].decode("utf-8") if run_result.output[1] else ""
         exit_code = run_result.exit_code
-        output = stdout
         success = exit_code == 0
+        output = stdout if success else stderr
         return success, output, exit_code
 
     def verify(
@@ -260,7 +260,7 @@ class EiffelExecutor(LanguageExecutor):
             # Legacy single file
             self._put_code_to_container(session_id, code)
 
-        run_cmd = "apb -c_compile -batch -autoproof -html"
+        run_cmd = "apb -batch -autoproof -html"
         run_result = self.container_mgr.run_command_in_container(
             session_id, run_cmd, timeout
         )
