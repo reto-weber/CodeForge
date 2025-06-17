@@ -167,15 +167,15 @@ class EiffelLibraryBrowser {
 
             if (result.success) {
                 let statusMessage = `Class ${className} fetched successfully`;
-                
+
                 // Show mapping information if a mapping was applied
                 if (result.mapped_class_name && result.mapped_class_name !== className.toUpperCase()) {
                     statusMessage += ` (mapped from ${className} to ${result.mapped_class_name})`;
                     this.showMappingInfo(className, result.mapped_class_name);
                 }
-                
+
                 this.showStatus(statusMessage, 'success');
-                
+
                 // Use CodeMirror editor if available, otherwise fallback to textContent
                 if (this.libraryEditor) {
                     this.libraryEditor.setValue(result.source_code);
@@ -318,16 +318,16 @@ class EiffelLibraryBrowser {
                 <span>Class name <strong>${originalName}</strong> was automatically mapped to <strong>${mappedName}</strong> based on configuration.</span>
             </div>
         `;
-        
+
         // Insert before the library output
         const outputContainer = this.libraryOutput.parentNode;
-        
+
         // Remove any previous mapping info
         const existingInfo = outputContainer.querySelector('.mapping-info');
         if (existingInfo) {
             outputContainer.removeChild(existingInfo);
         }
-        
+
         // Add new mapping info before the editor
         if (this.libraryEditor) {
             const editorElement = this.libraryEditor.getWrapperElement();
@@ -335,7 +335,7 @@ class EiffelLibraryBrowser {
         } else {
             outputContainer.insertBefore(infoDiv, this.libraryOutput);
         }
-        
+
         // Style the notification
         const notification = infoDiv.querySelector('.mapping-notification');
         if (notification) {
@@ -349,7 +349,7 @@ class EiffelLibraryBrowser {
             notification.style.color = '#2c5282';
             notification.style.fontSize = '0.875rem';
         }
-        
+
         // Style the icon
         const icon = infoDiv.querySelector('.info-icon');
         if (icon) {
@@ -392,7 +392,7 @@ class EiffelLibraryBrowser {
     async reloadMappings() {
         try {
             this.showStatus('Reloading mappings...', 'loading');
-            
+
             const response = await fetch('/eiffel/mappings/reload', {
                 method: 'POST',
                 headers: {
@@ -434,17 +434,17 @@ class EiffelLibraryBrowser {
                 </button>
             </div>
         `;
-        
+
         librarySearch.appendChild(mappingsManagement);
 
         // Add event listeners
         const reloadBtn = mappingsManagement.querySelector('.mappings-reload-btn');
         const showBtn = mappingsManagement.querySelector('.mappings-show-btn');
-        
+
         if (reloadBtn) {
             reloadBtn.addEventListener('click', () => this.reloadMappings());
         }
-        
+
         if (showBtn) {
             showBtn.addEventListener('click', () => this.showMappingsDialog());
         }
@@ -455,7 +455,7 @@ class EiffelLibraryBrowser {
      */
     async showMappingsDialog() {
         const mappings = await this.loadAvailableMappings();
-        
+
         if (Object.keys(mappings).length === 0) {
             this.showStatus('No mappings available', 'error');
             return;
@@ -481,12 +481,12 @@ class EiffelLibraryBrowser {
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; max-width: 80%; max-height: 80%;
                 overflow-y: auto;
             `;
-            
+
             const closeBtn = document.createElement('button');
             closeBtn.textContent = 'Close';
             closeBtn.onclick = () => document.body.removeChild(mappingsDiv);
             closeBtn.style.cssText = 'margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer;';
-            
+
             mappingsDiv.appendChild(closeBtn);
             document.body.appendChild(mappingsDiv);
         }

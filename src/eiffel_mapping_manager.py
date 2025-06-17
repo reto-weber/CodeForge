@@ -32,9 +32,9 @@ class EiffelMappingManager:
             self.mappings.clear()
 
             # Load mappings from XML
-            for mapping in root.findall('mapping'):
-                old_name = mapping.get('old_name')
-                new_name = mapping.get('new_name')
+            for mapping in root.findall("mapping"):
+                old_name = mapping.get("old_name")
+                new_name = mapping.get("new_name")
 
                 if old_name and new_name:
                     # Store mappings in uppercase for case-insensitive lookup
