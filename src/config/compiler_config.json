@@ -6,5 +6,5 @@
         "java",
         "eiffel"
     ],
-    "default_language": "java"
+    "default_language": "eiffel"
 }

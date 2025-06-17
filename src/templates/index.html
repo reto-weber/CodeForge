@@ -16,6 +16,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/matchesonscrollbar.min.css">
 </head>
 
 <body>
@@ -107,6 +110,37 @@
                 </div>
             </section>
 
+            <!-- Eiffel Library Browser Section -->
+            <section class="library-section" id="library-section" style="display: none;">
+                <h2>Eiffel Library Browser</h2>
+                <div class="library-browser-card">
+                    <div class="library-search">
+                        <div class="search-input-group">
+                            <input type="text" id="library-class-input"
+                                placeholder="Enter Eiffel class name (e.g., ANY, SIMPLE_ARRAY, MML_SET)"
+                                class="library-class-input">
+                            <button id="fetch-library-btn" class="btn btn-primary">Fetch Class</button>
+                        </div>
+                        <div class="quick-access-buttons">
+                            <p class="quick-access-label">Quick Access:</p>
+                            <button class="quick-class-btn btn btn-outline" data-class="ANY">ANY</button>
+                            <button class="quick-class-btn btn btn-outline"
+                                data-class="SIMPLE_ARRAY">SIMPLE_ARRAY</button>
+                            <button class="quick-class-btn btn btn-outline" data-class="MML_SET">MML_SET</button>
+                            <button class="quick-class-btn btn btn-outline" data-class="INTEGER">INTEGER</button>
+                        </div>
+                        <p class="library-help-text">
+                            Browse Eiffel library classes by entering the class name. This will fetch the class
+                            interface using 'eiffel-studio -short'.
+                        </p>
+                    </div>
+                    <div class="library-output-container">
+                        <div id="library-status" class="status-indicator"></div>
+                        <pre id="library-output" class="code-output library-code"></pre>
+                    </div>
+                </div>
+            </section>
+
             <!-- Session Management Section -->
             <section class="session-section" id="session">
                 <h2>Session Management</h2>
@@ -154,6 +188,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+    <!-- Search addons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/matchesonscrollbar.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/scroll/annotatescrollbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/jump-to-line.min.js"></script>
 
     <!-- Application modules -->
     <script src="{{ url_for('static', path='/js/dom-elements.js') }}"></script>
@@ -165,6 +208,7 @@
     <script src="{{ url_for('static', path='/js/code-execution.js') }}"></script>
     <script src="{{ url_for('static', path='/js/config-manager.js') }}"></script>
     <script src="{{ url_for('static', path='/js/main.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/library-browser.js') }}"></script>
 </body>
 
 </html>

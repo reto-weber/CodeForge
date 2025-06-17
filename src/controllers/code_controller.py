@@ -101,19 +101,22 @@ async def compile_code(
 
             # Convert Pydantic FileInfo models to executor FileInfo objects
             from language_executor.base import FileInfo as ExecutorFileInfo
+
             file_objects = [ExecutorFileInfo(f.name, f.content) for f in files]
-            
+
             # Pass all files to the executor
             exec_version = version if version is not None else ""
             executor = get_executor_by_name(language, exec_version)
-            success, output, output_path = executor.compile(file_objects, session_id, main_file)
+            success, output, output_path = executor.compile(
+                file_objects, session_id, main_file
+            )
         else:
             # Legacy form request
             if not code or not language:
                 raise HTTPException(
                     status_code=400, detail="Code and language are required"
                 )
-                
+
             # Single file compilation (legacy)
             exec_version = version if version is not None else ""
             executor = get_executor_by_name(language, exec_version)
@@ -127,7 +130,7 @@ async def compile_code(
             "output_path": output_path,
         }
 
-        response = JSONResponse(content=response_data)
+        response = JSONResponse(content=response_data, status_code=200)
         response.set_cookie(
             key="session_id", value=session_id, httponly=True, max_age=86400
         )
@@ -140,8 +143,7 @@ async def compile_code(
             "file_path": None,
             "output_path": None,
         }
-
-        response = JSONResponse(content=response_data)
+        response = JSONResponse(content=response_data, status_code=500)
         response.set_cookie(
             key="session_id", value=session_id, httponly=True, max_age=86400
         )
@@ -210,10 +212,11 @@ async def run_code(
     def run_in_container():
         try:
             executor = get_executor_by_name(language, version)
-            
+
             if request_data["is_multi_file"]:
                 # Multi-file execution
                 from language_executor.base import FileInfo as ExecutorFileInfo
+
                 file_objects = [ExecutorFileInfo(f.name, f.content) for f in files]
                 success, output, exit_code = executor.execute(
                     file_objects, session_id, timeout, main_file
@@ -221,7 +224,7 @@ async def run_code(
             else:
                 # Legacy single file execution
                 success, output, exit_code = executor.execute(code, session_id, timeout)
-                
+
             if execution_id in active_processes:
                 proc = active_processes[execution_id]
                 proc.completed = True
@@ -251,7 +254,7 @@ async def run_code(
         "started": True,
     }
 
-    response = JSONResponse(content=response_data)
+    response = JSONResponse(content=response_data, status_code=200)
     response.set_cookie(
         key="session_id", value=session_id, httponly=True, max_age=86400
     )
@@ -367,7 +370,7 @@ async def verify_code(
         "started": True,
     }
 
-    response = JSONResponse(content=response_data)
+    response = JSONResponse(content=response_data, status_code=200)
     response.set_cookie(
         key="session_id", value=session_id, httponly=True, max_age=86400
     )
@@ -377,7 +380,10 @@ async def verify_code(
 @router.post("/cancel", tags=["Code Execution"])
 async def cancel_execution(execution_id: str = Form(...)):
     if execution_id not in active_processes:
-        return {"success": False, "message": "Execution not found"}
+        return JSONResponse(
+            content={"success": False, "message": "Execution not found"},
+            status_code=404,
+        )
     proc = active_processes[execution_id]
     session_id = proc.session_id
     try:
@@ -444,22 +450,34 @@ async def get_session_info(session_id: str = Cookie(None)):
 @router.post("/session/cleanup", tags=["Session"])
 async def cleanup_session(session_id: str = Cookie(None)):
     if not session_id:
-        return {"success": False, "message": "No session ID provided"}
+        return JSONResponse(
+            content={"success": False, "message": "No session ID provided"},
+            status_code=400,
+        )
     try:
         container_mgr = get_container_manager()
         success = container_mgr.cleanup_session_container(session_id)
         if session_id in user_sessions:
             del user_sessions[session_id]
-        return {
-            "success": success,
-            "message": (
-                "Session cleaned up successfully"
-                if success
-                else "Failed to clean up session"
-            ),
-        }
+        return JSONResponse(
+            content={
+                "success": success,
+                "message": (
+                    "Session cleaned up successfully"
+                    if success
+                    else "Failed to clean up session"
+                ),
+            },
+            status_code=200 if success else 500,
+        )
     except Exception as e:
-        return {"success": False, "message": f"Error cleaning up session: {str(e)}"}
+        return JSONResponse(
+            content={
+                "success": False,
+                "message": f"Error cleaning up session: {str(e)}",
+            },
+            status_code=500,
+        )
 
 
 @router.get("/examples", tags=["Examples"])
@@ -482,13 +500,18 @@ async def get_examples():
             print(f"Trying fallback abs_path: {abs_path}")
             examples_path = abs_path
         if not os.path.exists(examples_path):
-            return {"error": f"Examples index not found at {examples_path}"}
+            return JSONResponse(
+                content={"error": f"Examples index not found at {examples_path}"},
+                status_code=404,
+            )
 
         with open(examples_path, "r", encoding="utf-8") as f:
             examples = json.load(f)
-        return examples
+        return JSONResponse(content=examples, status_code=200)
     except Exception as e:
-        return {"error": f"Failed to load examples: {str(e)}"}
+        return JSONResponse(
+            content={"error": f"Failed to load examples: {str(e)}"}, status_code=500
+        )
 
 
 @router.get("/examples/{language}/{filename}", tags=["Examples"])
@@ -512,15 +535,82 @@ async def get_example_code(language: str, filename: str):
             print(f"Trying fallback abs_path: {abs_path}")
             file_path = abs_path
         if not os.path.exists(file_path):
-            raise HTTPException(
-                status_code=404, detail=f"Example file not found at {file_path}"
+            return JSONResponse(
+                content={"error": f"Example file not found at {file_path}"},
+                status_code=404,
             )
         with open(file_path, "r", encoding="utf-8") as f:
             code = f.read()
-        return {"code": code, "filename": filename, "language": language}
+        return JSONResponse(
+            content={"code": code, "filename": filename, "language": language},
+            status_code=200,
+        )
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=404, detail="Example file not found (FileNotFoundError)"
+        return JSONResponse(
+            content={"error": "Example file not found (FileNotFoundError)"},
+            status_code=404,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load example: {str(e)}")
+        return JSONResponse(
+            content={"error": f"Failed to load example: {str(e)}"}, status_code=500
+        )
+
+
+@router.get("/eiffel/library/{class_name}", tags=["Eiffel Library"])
+async def get_eiffel_library_class(
+    class_name: str,
+    session_id: str = Cookie(None),
+):
+    """
+    Fetch the source code of an Eiffel library class using apb -short.
+    Only available for Eiffel language.
+    """
+    try:
+        session_id = get_or_create_session_id(session_id)
+        update_session_activity(session_id)
+
+        # Get Eiffel executor
+        from language_executor.factory import get_executor_by_name
+
+        executor = get_executor_by_name("eiffel", "")
+
+        # Check if the executor has the get_library_class method
+        if not hasattr(executor, "get_library_class"):
+            raise HTTPException(
+                status_code=400,
+                detail="Library class browsing not supported for this language",
+            )
+
+        success, source_code = executor.get_library_class(class_name, session_id)
+
+        response_data = {
+            "success": success,
+            "class_name": class_name,
+            "source_code": source_code if success else "",
+            "language": "eiffel",
+            "message": "Library class fetched successfully" if success else source_code,
+        }
+
+        response = JSONResponse(
+            content=response_data, status_code=200 if success else 500
+        )
+        response.set_cookie(
+            key="session_id", value=session_id, httponly=True, max_age=86400
+        )
+        return response
+
+    except Exception as e:
+        response_data = {
+            "success": False,
+            "class_name": class_name,
+            "source_code": "",
+            "language": "eiffel",
+            "message": f"Error fetching library class: {str(e)}",
+        }
+
+        response = JSONResponse(content=response_data, status_code=500)
+        if session_id:
+            response.set_cookie(
+                key="session_id", value=session_id, httponly=True, max_age=86400
+            )
+        return response

@@ -17,12 +17,12 @@ class FileManager {
     initialize() {
         // Set up event listeners first
         this.setupEventListeners();
-        
+
         // Delay file creation to ensure language dropdown is properly initialized
         setTimeout(() => {
             this.initializeFirstFile();
         }, 100);
-        
+
         // Listen for language changes to suggest filename updates
         this.dom.language.addEventListener('change', () => this.onLanguageChange());
     }
@@ -30,7 +30,7 @@ class FileManager {
     initializeFirstFile() {
         // Get the default language from data attribute (most reliable)
         let currentLanguage = 'python'; // fallback
-        
+
         if (this.dom.language) {
             // First try the data attribute
             const defaultLang = this.dom.language.dataset.defaultLanguage;
@@ -49,14 +49,14 @@ class FileManager {
                 }
             }
         }
-        
+
         const defaultFilename = this.getDefaultFilename(currentLanguage);
-        
+
         // Ensure the dropdown is set to the correct language
         if (this.dom.language.value !== currentLanguage) {
             this.dom.language.value = currentLanguage;
         }
-        
+
         this.createFile(defaultFilename, '', 'main', true);
     }
 
@@ -126,7 +126,7 @@ class FileManager {
         const tabElement = document.createElement('div');
         tabElement.className = 'file-tab';
         tabElement.dataset.fileId = file.id;
-        
+
         tabElement.innerHTML = `
             <span class="tab-name" title="Double-click to rename">${file.name}</span>
             <button class="tab-close" title="Close file">&times;</button>
@@ -228,19 +228,19 @@ class FileManager {
         // Suggest a default filename based on current language
         const currentLanguage = this.dom.language.value || 'python';
         const extension = this.getLanguageExtension(currentLanguage);
-        
+
         // Generate a unique filename
         let baseName = 'new_file';
         let counter = 1;
         let suggestedName = `${baseName}.${extension}`;
-        
+
         // Check for duplicates and increment counter if needed
         const existingFiles = Array.from(this.files.values());
         while (existingFiles.some(file => file.name === suggestedName)) {
             suggestedName = `${baseName}${counter}.${extension}`;
             counter++;
         }
-        
+
         let filename = prompt('Enter filename:', suggestedName);
         if (!filename) return null;
 
@@ -269,26 +269,26 @@ class FileManager {
             'javascript': 'main.js',
             'eiffel': 'main.e'
         };
-        
+
         return defaultNames[language] || 'main.txt';
     }
 
     onLanguageChange() {
         const newLanguage = this.dom.language.value;
-        
+
         // Update the language for the active file
         if (this.activeFileId && this.files.has(this.activeFileId)) {
             const activeFile = this.files.get(this.activeFileId);
             const currentExtension = this.getFileExtension(activeFile.name);
             const expectedExtension = this.getLanguageExtension(newLanguage);
-            
+
             // If the file has a generic extension or wrong extension, suggest renaming
-            if (currentExtension === 'txt' || currentExtension === '' || 
+            if (currentExtension === 'txt' || currentExtension === '' ||
                 this.getLanguageFromExtension(currentExtension) !== newLanguage) {
-                
+
                 const baseName = this.getBaseName(activeFile.name);
                 const suggestedName = baseName + '.' + expectedExtension;
-                
+
                 // Ask user if they want to rename the file
                 if (confirm(`Change filename from "${activeFile.name}" to "${suggestedName}" to match the selected language?`)) {
                     this.renameFile(this.activeFileId, suggestedName);
@@ -312,7 +312,7 @@ class FileManager {
             'javascript': 'js',
             'eiffel': 'e'
         };
-        
+
         return extensions[language] || 'txt';
     }
 
@@ -367,7 +367,7 @@ class FileManager {
             const currentContent = this.codeEditor.getCodeContent();
             this.files.get(this.activeFileId).content = currentContent;
         }
-        
+
         return Array.from(this.files.values());
     }
 
@@ -384,17 +384,17 @@ class FileManager {
 
         const file = this.files.get(fileId);
         const newName = prompt('Enter new filename:', file.name);
-        
+
         if (newName && newName.trim() && newName !== file.name) {
             const trimmedName = newName.trim();
-            
+
             // Check for duplicates
             const existingFiles = Array.from(this.files.values());
             if (existingFiles.some(f => f.id !== fileId && f.name === trimmedName)) {
                 alert('A file with this name already exists.');
                 return;
             }
-            
+
             this.renameFile(fileId, trimmedName);
         }
     }

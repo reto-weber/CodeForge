@@ -36,7 +36,7 @@ def load_config() -> CompilerConfig:
         # Fallback to default config
         default_config = {
             "compilers": ["python", "c", "cpp", "java", "eiffel"],
-            "default_language": "python",
+            "default_language": "eiffel",
         }
         os.makedirs(config_dir, exist_ok=True)
         with open(config_path, "w", encoding="utf-8") as f:

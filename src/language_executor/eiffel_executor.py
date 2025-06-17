@@ -115,17 +115,17 @@ class EiffelExecutor(LanguageExecutor):
         return True, "Code file successfully created", None
 
     def compile(
-        self, 
-        code: Union[str, List[FileInfo]], 
-        session_id: str, 
-        main_file: Optional[str] = None
+        self,
+        code: Union[str, List[FileInfo]],
+        session_id: str,
+        main_file: Optional[str] = None,
     ) -> Tuple[bool, str, Optional[str]]:
         # Extract class name and creation procedure from the code
         print(f"Compiling Eiffel code for session {session_id}")
 
         # Handle both legacy string and new multi-file formats
         files, normalized_main_file = self._normalize_input(code, main_file)
-        
+
         # For Eiffel, we need to find the main class or use the first .e file
         main_code = None
         if main_file:
@@ -167,7 +167,7 @@ class EiffelExecutor(LanguageExecutor):
         else:
             # Legacy single file
             self._put_code_to_container(session_id, code)
-            
+
         cmd = "apb -c_compile -batch"
         exec_result = self.container_mgr.run_command_in_container(session_id, cmd, 60)
         if exec_result is None:
@@ -181,19 +181,19 @@ class EiffelExecutor(LanguageExecutor):
         return success, output, output_path
 
     def execute(
-        self, 
-        code: Union[str, List[FileInfo]], 
-        session_id: str, 
+        self,
+        code: Union[str, List[FileInfo]],
+        session_id: str,
         timeout: int = 60,
-        main_file: Optional[str] = None
+        main_file: Optional[str] = None,
     ) -> Tuple[bool, str, int]:
         print(f"Executing Eiffel code for session {session_id}")
-        
+
         # For multi-file execution, write files if needed
         if isinstance(code, list):
             if not self._write_files_to_container(code, session_id):
                 return False, "Failed to copy files to container", -1
-        
+
         run_cmd = "./EIFGENs/tests/W_code/autoproof-tests"
         run_result = self.container_mgr.run_command_in_container(
             session_id, run_cmd, timeout
@@ -208,15 +208,15 @@ class EiffelExecutor(LanguageExecutor):
         return success, output, exit_code
 
     def verify(
-        self, 
-        code: Union[str, List[FileInfo]], 
-        session_id: str, 
+        self,
+        code: Union[str, List[FileInfo]],
+        session_id: str,
         timeout: int = 60,
-        main_file: Optional[str] = None
+        main_file: Optional[str] = None,
     ) -> Tuple[bool, str, int]:
         # Handle both legacy string and new multi-file formats
         files, normalized_main_file = self._normalize_input(code, main_file)
-        
+
         # For Eiffel, we need to find the main class or use the first .e file
         main_code = None
         if main_file:
@@ -234,7 +234,7 @@ class EiffelExecutor(LanguageExecutor):
 
         if not main_code:
             return False, "No Eiffel code found", -1
-            
+
         # Extract class name and creation procedure from the code
         try:
             class_name = self._get_class_name(main_code)
@@ -259,7 +259,7 @@ class EiffelExecutor(LanguageExecutor):
         else:
             # Legacy single file
             self._put_code_to_container(session_id, code)
-            
+
         run_cmd = "apb -c_compile -batch -autoproof -html"
         run_result = self.container_mgr.run_command_in_container(
             session_id, run_cmd, timeout
@@ -272,3 +272,38 @@ class EiffelExecutor(LanguageExecutor):
         output = run_result.output[0].decode()
         success = exit_code == 0
         return success, output, exit_code
+
+    def get_library_class(
+        self, class_name: str, session_id: str, timeout: int = 30
+    ) -> Tuple[bool, str]:
+        """F
+        Fetch the source code of an Eiffel library class using apb -short.
+        Returns (success, source_code)
+        """
+        print(f"Fetching Eiffel library class {class_name} for session {session_id}")
+
+        # Ensure we have a container with Eiffel environment
+        if session_id not in self.container_mgr.active_containers:
+            if not self.container_mgr.create_session_container(session_id, "eiffel"):
+                return False, "Failed to create Eiffel container"
+        self._put_ecf_to_container(session_id)
+        # Use apb -short to get the class source code
+        temp_file = "temp.txt"
+        # Remove temp.txt if it exists
+        rm_cmd = f"rm -f {temp_file}"
+        self.container_mgr.run_command_in_container(session_id, rm_cmd, timeout)
+
+        # Run apb -flat to write class to temp.txt
+        cmd = f"apb -flat {class_name} -batch -file {temp_file}"
+        exec_result = self.container_mgr.run_command_in_container(
+            session_id, cmd, timeout
+        )
+        if exec_result is None or exec_result.exit_code != 0:
+            return False, f"Failed to execute apb command in container"
+
+        # Read the content of temp.txt
+        read_result = self.container_mgr.read_file_from_container(session_id, temp_file)
+        if read_result is None:
+            return False, f"Failed to read {temp_file} from container"
+
+        return True, read_result

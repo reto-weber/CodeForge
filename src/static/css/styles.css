@@ -848,6 +848,139 @@ input[type="number"]:hover {
     color: #63b3ed;
 }
 
+/* Library Browser Section */
+.library-section {
+    margin-top: 2rem;
+}
+
+.library-browser-card {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.library-search {
+    margin-bottom: 1.5rem;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.library-class-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.library-class-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.library-help-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+    font-style: italic;
+}
+
+.quick-access-buttons {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+.quick-access-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin: 0 0 0.75rem 0;
+}
+
+.quick-class-btn {
+    margin: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.quick-class-btn:hover {
+    background-color: #3182ce;
+    border-color: #2c5aa0;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.library-output-container {
+    background-color: #f7fafc;
+    border-radius: 8px;
+    overflow: visible;
+    /* Allow resizing */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.library-output-container .CodeMirror {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    overflow: hidden;
+    min-height: 200px;
+    max-height: 600px;
+    transition: border-color 0.2s ease;
+}
+
+.library-output-container .CodeMirror:hover {
+    border-color: #a0aec0;
+}
+
+.library-output-container .CodeMirror:focus-within {
+    border-color: #3182ce;
+    box-shadow: 0 0 0 1px #3182ce;
+}
+
+.library-output-container .CodeMirror-scroll {
+    min-height: 200px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+#library-output {
+    background-color: #1a202c;
+    color: #e2e8f0;
+    padding: 1.5rem;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 500px;
+    overflow-y: auto;
+    margin: 0;
+    min-height: 150px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-content {

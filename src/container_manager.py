@@ -392,6 +392,32 @@ class ContainerManager:
             )
             return None
 
+    def read_file_from_container(
+        self, session_id: str, filename: str, encoding: str = "utf-8"
+    ) -> str:
+        """Read the content of a file from the container for the given session."""
+        if session_id not in self.active_containers:
+            raise RuntimeError(f"No active container for session {session_id}")
+        container = self.active_containers[session_id]["container"]
+        # Use 'cat' to read the file content
+        exec_result = container.exec_run(
+            f"cat {filename}",
+            stdout=True,
+            stderr=True,
+            stream=False,
+            demux=True,
+            user="coderunner",
+        )
+        if exec_result.exit_code != 0:
+            stderr = (
+                exec_result.output[1].decode(encoding) if exec_result.output[1] else ""
+            )
+            raise RuntimeError(
+                f"Failed to read file {filename} from container: {stderr}"
+            )
+        stdout = exec_result.output[0].decode(encoding) if exec_result.output[0] else ""
+        return stdout
+
     def cleanup_all_code_containers(self) -> int:
         """Clean up all code execution containers (startup/shutdown cleanup)."""
         cleaned_count = 0

@@ -47,6 +47,11 @@ class CodeEditorManager {
             indentWithTabs: false,
             extraKeys: {
                 "Ctrl-Space": "autocomplete",
+                "Ctrl-F": "find", // Enable Ctrl+F search
+                "Ctrl-G": "findNext",       // Find next occurrence
+                "Shift-Ctrl-G": "findPrev", // Find previous occurrence
+                "Ctrl-H": "replace",        // Find and replace
+                "Alt-G": "jumpToLine",      // Jump to line
                 "Tab": function (cm) {
                     if (cm.somethingSelected()) {
                         cm.indentSelection("add");

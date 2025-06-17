@@ -25,10 +25,10 @@ feature
 		end
 
 end
-"""
+""",
         },
         {
-            "name": "new_file.e", 
+            "name": "new_file.e",
             "content": """class
 	NEW_FILE
 
@@ -43,15 +43,13 @@ feature
 		end
 
 end
-"""
-        }
+""",
+        },
     ],
-    "main_file": "hello_world.e"
+    "main_file": "hello_world.e",
 }
 
-headers = {
-    "Content-Type": "application/json"
-}
+headers = {"Content-Type": "application/json"}
 
 print("Testing multi-file Eiffel compilation...")
 print(f"Payload: {json.dumps(payload, indent=2)}")

@@ -20,12 +20,14 @@ class CodeCompilerApp {
         this.sessionManager = new SessionManager(this.dom, this.ui);
         this.codeExecution = new CodeExecutionManager(this.dom, this.codeEditor, this.ui, this.fileManager);
         this.configManager = new ConfigManager(this.dom, this.ui, this.examplesManager);
+        this.libraryBrowser = new EiffelLibraryBrowser();
 
         // Make managers globally available for backwards compatibility
         window.codeExecution = this.codeExecution;
         window.sessionManager = this.sessionManager;
         window.examplesManager = this.examplesManager;
         window.fileManager = this.fileManager;
+        window.libraryBrowser = this.libraryBrowser;
 
         console.log('All modules initialized');
     }
@@ -58,6 +60,7 @@ class CodeCompilerApp {
             this.examplesManager.updateExamplesDropdown();
             this.ui.updateVerifyButtonVisibility(this.dom.language.value);
             this.codeExecution.resetCompilation();
+            this.updateLibraryBrowserVisibility(this.dom.language.value);
         });
 
         // Examples handling
@@ -91,6 +94,12 @@ class CodeCompilerApp {
         console.log('Event listeners set up');
     }
 
+    updateLibraryBrowserVisibility(language) {
+        if (this.libraryBrowser) {
+            this.libraryBrowser.updateVisibility(language);
+        }
+    }
+
     async initialize() {
         console.log('Starting application initialization...');
 
@@ -100,6 +109,9 @@ class CodeCompilerApp {
 
         // Set initial verify button visibility
         this.ui.updateVerifyButtonVisibility(this.dom.language.value);
+
+        // Set initial library browser visibility
+        this.updateLibraryBrowserVisibility(this.dom.language.value);
 
         // Start session management
         this.sessionManager.startAutoRefresh();

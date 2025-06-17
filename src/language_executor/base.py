@@ -4,6 +4,7 @@ from typing import Tuple, Optional, List, Union
 
 class FileInfo:
     """Information about a source file."""
+
     def __init__(self, name: str, content: str):
         self.name = name
         self.content = content
@@ -19,10 +20,10 @@ class LanguageExecutor(ABC):
 
     @abstractmethod
     def compile(
-        self, 
-        code: Union[str, List[FileInfo]], 
-        session_id: str, 
-        main_file: Optional[str] = None
+        self,
+        code: Union[str, List[FileInfo]],
+        session_id: str,
+        main_file: Optional[str] = None,
     ) -> Tuple[bool, str, Optional[str]]:
         """
         Compile the code.
@@ -40,7 +41,7 @@ class LanguageExecutor(ABC):
         code: Union[str, List[FileInfo]],
         session_id: str,
         timeout: int = 30,
-        main_file: Optional[str] = None
+        main_file: Optional[str] = None,
     ) -> Tuple[bool, str, int]:
         """
         Execute the code.
@@ -59,17 +60,18 @@ class LanguageExecutor(ABC):
         Returns True if all files were written successfully.
         """
         from container_manager import get_container_manager
+
         container_mgr = get_container_manager()
 
         for file_info in files:
-            if not container_mgr.put_file_in_container(session_id, file_info.name, file_info.content):
+            if not container_mgr.put_file_in_container(
+                session_id, file_info.name, file_info.content
+            ):
                 return False
         return True
 
     def _normalize_input(
-        self, 
-        code: Union[str, List[FileInfo]], 
-        main_file: Optional[str] = None
+        self, code: Union[str, List[FileInfo]], main_file: Optional[str] = None
     ) -> Tuple[List[FileInfo], str]:
         """
         Convert input to normalized format.
