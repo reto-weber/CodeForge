@@ -408,6 +408,101 @@
     border-bottom-color: #f56565;
 }
 
+/* Eiffel Class Name Mappings */
+.mapping-info {
+    margin: 1rem 0;
+    display: none;
+}
+
+.mapping-notice {
+    background-color: #e6f3ff;
+    border: 1px solid #63b3ed;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.mapping-icon {
+    font-size: 1rem;
+}
+
+.mapping-text {
+    flex: 1;
+    color: #2c5aa0;
+}
+
+.mapping-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #718096;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+}
+
+.mapping-close:hover {
+    background-color: rgba(113, 128, 150, 0.1);
+    color: #4a5568;
+}
+
+.mappings-management {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.mappings-controls {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.mappings-controls .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.mappings-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+.mappings-list li {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #f7fafc;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mappings-list li:last-child {
+    border-bottom: none;
+}
+
+.mappings-list code {
+    background-color: #f7fafc;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.875rem;
+    color: #2d3748;
+}
+
 /* Responsive design */
 @media (max-width: 640px) {
     .modal {

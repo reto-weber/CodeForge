@@ -8,6 +8,7 @@ class EiffelLibraryBrowser {
         this.libraryEditor = null; // CodeMirror instance for library output
         this.initializeElements();
         this.bindEvents();
+        this.addMappingsManagement();
     }
 
     initializeElements() {
@@ -165,7 +166,16 @@ class EiffelLibraryBrowser {
             const result = await response.json();
 
             if (result.success) {
-                this.showStatus(`Class ${className} fetched successfully`, 'success');
+                let statusMessage = `Class ${className} fetched successfully`;
+                
+                // Show mapping information if a mapping was applied
+                if (result.mapped_class_name && result.mapped_class_name !== className.toUpperCase()) {
+                    statusMessage += ` (mapped from ${className} to ${result.mapped_class_name})`;
+                    this.showMappingInfo(className, result.mapped_class_name);
+                }
+                
+                this.showStatus(statusMessage, 'success');
+                
                 // Use CodeMirror editor if available, otherwise fallback to textContent
                 if (this.libraryEditor) {
                     this.libraryEditor.setValue(result.source_code);
@@ -255,7 +265,10 @@ class EiffelLibraryBrowser {
         return [
             'ANY',
             'SIMPLE_ARRAY',
-            'INTEGER',
+            'INTEGER',      // Will be mapped to INTEGER_32
+            'STRING',       // Will be mapped to STRING_8
+            'DOUBLE',       // Will be mapped to REAL_64
+            'CHARACTER',    // Will be mapped to CHARACTER_8
             'MML_SET'
         ];
     }
@@ -288,6 +301,195 @@ class EiffelLibraryBrowser {
                 this.fetchLibraryClass();
             }
         });
+    }
+
+    /**
+     * Show mapping information when a class name has been mapped
+     * @param {string} originalName The original class name requested
+     * @param {string} mappedName The mapped class name that was used
+     */
+    showMappingInfo(originalName, mappedName) {
+        // Add a notification about the mapping
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'mapping-info';
+        infoDiv.innerHTML = `
+            <div class="mapping-notification">
+                <i class="info-icon">ℹ️</i>
+                <span>Class name <strong>${originalName}</strong> was automatically mapped to <strong>${mappedName}</strong> based on configuration.</span>
+            </div>
+        `;
+        
+        // Insert before the library output
+        const outputContainer = this.libraryOutput.parentNode;
+        
+        // Remove any previous mapping info
+        const existingInfo = outputContainer.querySelector('.mapping-info');
+        if (existingInfo) {
+            outputContainer.removeChild(existingInfo);
+        }
+        
+        // Add new mapping info before the editor
+        if (this.libraryEditor) {
+            const editorElement = this.libraryEditor.getWrapperElement();
+            outputContainer.insertBefore(infoDiv, editorElement);
+        } else {
+            outputContainer.insertBefore(infoDiv, this.libraryOutput);
+        }
+        
+        // Style the notification
+        const notification = infoDiv.querySelector('.mapping-notification');
+        if (notification) {
+            notification.style.backgroundColor = '#ebf8ff';
+            notification.style.border = '1px solid #90cdf4';
+            notification.style.borderRadius = '6px';
+            notification.style.padding = '0.75rem 1rem';
+            notification.style.marginBottom = '1rem';
+            notification.style.display = 'flex';
+            notification.style.alignItems = 'center';
+            notification.style.color = '#2c5282';
+            notification.style.fontSize = '0.875rem';
+        }
+        
+        // Style the icon
+        const icon = infoDiv.querySelector('.info-icon');
+        if (icon) {
+            icon.style.marginRight = '0.5rem';
+            icon.style.fontSize = '1.25rem';
+        }
+    }
+
+    /**
+     * Load and display available mappings
+     */
+    async loadAvailableMappings() {
+        try {
+            const response = await fetch('/eiffel/mappings', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log(`Loaded ${result.count} Eiffel class mappings:`, result.mappings);
+                return result.mappings;
+            } else {
+                console.warn('Failed to load Eiffel mappings:', result.message);
+                return {};
+            }
+
+        } catch (error) {
+            console.error('Error loading Eiffel mappings:', error);
+            return {};
+        }
+    }
+
+    /**
+     * Reload mappings from the server
+     */
+    async reloadMappings() {
+        try {
+            this.showStatus('Reloading mappings...', 'loading');
+            
+            const response = await fetch('/eiffel/mappings/reload', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showStatus(`Reloaded ${result.count} mappings successfully`, 'success');
+                console.log('Mappings reloaded successfully');
+            } else {
+                this.showStatus(`Failed to reload mappings: ${result.message}`, 'error');
+            }
+
+        } catch (error) {
+            console.error('Error reloading mappings:', error);
+            this.showStatus(`Error reloading mappings: ${error.message}`, 'error');
+        }
+    }
+
+    /**
+     * Add a quick access button for mappings management
+     */
+    addMappingsManagement() {
+        const librarySearch = document.querySelector('.library-search');
+        if (!librarySearch) return;
+
+        const mappingsManagement = document.createElement('div');
+        mappingsManagement.className = 'mappings-management';
+        mappingsManagement.innerHTML = `
+            <div class="mappings-controls">
+                <button class="btn btn-outline mappings-reload-btn" title="Reload class name mappings">
+                    🔄 Reload Mappings
+                </button>
+                <button class="btn btn-outline mappings-show-btn" title="Show available mappings">
+                    📋 Show Mappings
+                </button>
+            </div>
+        `;
+        
+        librarySearch.appendChild(mappingsManagement);
+
+        // Add event listeners
+        const reloadBtn = mappingsManagement.querySelector('.mappings-reload-btn');
+        const showBtn = mappingsManagement.querySelector('.mappings-show-btn');
+        
+        if (reloadBtn) {
+            reloadBtn.addEventListener('click', () => this.reloadMappings());
+        }
+        
+        if (showBtn) {
+            showBtn.addEventListener('click', () => this.showMappingsDialog());
+        }
+    }
+
+    /**
+     * Show a dialog with available mappings
+     */
+    async showMappingsDialog() {
+        const mappings = await this.loadAvailableMappings();
+        
+        if (Object.keys(mappings).length === 0) {
+            this.showStatus('No mappings available', 'error');
+            return;
+        }
+
+        // Create mappings display
+        let mappingsHtml = '<h4>Available Class Name Mappings</h4><ul class="mappings-list">';
+        for (const [oldName, newName] of Object.entries(mappings)) {
+            mappingsHtml += `<li><code>${oldName}</code> → <code>${newName}</code></li>`;
+        }
+        mappingsHtml += '</ul>';
+
+        // Show in a simple modal or alert (depending on what's available)
+        if (window.modalManager) {
+            window.modalManager.alert('Eiffel Class Name Mappings', mappingsHtml);
+        } else {
+            // Fallback: create a simple display
+            const mappingsDiv = document.createElement('div');
+            mappingsDiv.innerHTML = mappingsHtml;
+            mappingsDiv.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: white; padding: 2rem; border: 1px solid #ccc; border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; max-width: 80%; max-height: 80%;
+                overflow-y: auto;
+            `;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Close';
+            closeBtn.onclick = () => document.body.removeChild(mappingsDiv);
+            closeBtn.style.cssText = 'margin-top: 1rem; padding: 0.5rem 1rem; cursor: pointer;';
+            
+            mappingsDiv.appendChild(closeBtn);
+            document.body.appendChild(mappingsDiv);
+        }
     }
 }
 

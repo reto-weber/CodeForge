@@ -126,10 +126,15 @@
                                 data-class="SIMPLE_ARRAY">SIMPLE_ARRAY</button>
                             <button class="quick-class-btn btn btn-outline" data-class="MML_SET">MML_SET</button>
                             <button class="quick-class-btn btn btn-outline" data-class="INTEGER">INTEGER</button>
+                            <button class="quick-class-btn btn btn-outline" data-class="STRING">STRING</button>
+                            <button class="quick-class-btn btn btn-outline" data-class="DOUBLE">DOUBLE</button>
+                            <button class="quick-class-btn btn btn-outline" data-class="REAL">REAL</button>
                         </div>
                         <p class="library-help-text">
-                            Browse Eiffel library classes by entering the class name. This will fetch the class
-                            interface using 'eiffel-studio -short'.
+                            Browse Eiffel library classes by entering the class name. Legacy class names (like STRING, DOUBLE, REAL) 
+                            will be automatically mapped to their modern equivalents (STRING_8, REAL_64, REAL_32).
+                        </p>
+                            interface using 'eiffel-studio -flat'.
                         </p>
                     </div>
                     <div class="library-output-container">
