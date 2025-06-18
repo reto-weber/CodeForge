@@ -303,7 +303,10 @@ class EiffelExecutor(LanguageExecutor):
             session_id, cmd, timeout
         )
         if exec_result is None or exec_result.exit_code != 0:
-            return False, f"Failed to execute apb command in container"
+            return (
+                False,
+                f"Failed to execute apb command in container. This might be because the project did not compile successfully.",
+            )
 
         # Read the content of temp.txt
         read_result = self.container_mgr.read_file_from_container(session_id, temp_file)

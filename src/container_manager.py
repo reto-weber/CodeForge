@@ -181,8 +181,8 @@ class ContainerManager:
                 detach=True,
                 remove=False,  # We'll remove manually for cleanup control
                 working_dir="/workspace",
-                # mem_limit="512m",  # Memory limit for security
-                # cpu_quota=50000,  # CPU limit (50% of one core)
+                mem_limit="512m",  # Memory limit for security
+                cpu_quota=100000,  # CPU limit (50% of one core)
                 network_disabled=True,  # Disable network for security
                 user="coderunner",
                 command="sleep infinity",  # Keep container running

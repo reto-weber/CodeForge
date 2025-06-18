@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import threading
 import uuid
 from typing import Dict, Optional
 
@@ -17,6 +18,7 @@ from controllers.admin_controller import set_globals as set_admin_globals
 from controllers.code_controller import router as code_router
 from controllers.code_controller import set_globals as set_code_globals
 from models import ActiveProcess, UserSession
+from container_manager import get_container_manager
 
 # Global variables for process management
 active_processes: Dict[str, ActiveProcess] = {}
@@ -149,6 +151,20 @@ async def get_favicon():
     else:
         raise HTTPException(status_code=404, detail="Favicon not found")
 
+
+def background_cleanup():
+    container_mgr = get_container_manager()
+    while True:
+        try:
+            container_mgr.cleanup_old_containers(max_age_hours=1)
+        except Exception as e:
+            print(f"[Cleanup] Error: {e}")
+        time.sleep(600)  # Run every 10 minutes
+
+
+# Start background cleanup thread
+cleanup_thread = threading.Thread(target=background_cleanup, daemon=True)
+cleanup_thread.start()
 
 if __name__ == "__main__":
     import uvicorn

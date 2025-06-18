@@ -28,6 +28,10 @@
                 <h1><img src="favicon.ico">CodeForge</h1>
                 <p class="subtitle">Multi-language code execution and verification platform for academic research</p>
             </div>
+            <div class="keyboard-hint">
+                <button id="show-guide-btn" class="help-btn" title="Show Quick Guide">?</button>
+                <span class="hint-text">Press <kbd>Shift</kbd> + <kbd>?</kbd> for keyboard shortcuts</span>
+            </div>
         </div>
     </header>
 
@@ -252,6 +256,65 @@
     <script src="{{ url_for('static', path='/js/main.js') }}"></script>
     <script src="{{ url_for('static', path='/js/library-browser.js') }}"></script>
     <script src="{{ url_for('static', path='/js/header-collapse.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/keyboard-shortcuts.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/quick-guide.js') }}"></script>
+
+    <!-- Quick Guide Overlay -->
+    <div id="quick-guide-overlay" class="quick-guide-overlay">
+        <div class="quick-guide-content">
+            <div class="quick-guide-header">
+                <h2>🚀 Welcome to CodeForge</h2>
+                <button id="close-guide-btn" class="close-guide-btn">&times;</button>
+            </div>
+            <div class="quick-guide-body">
+                <div class="guide-section">
+                    <h3>📝 Getting Started</h3>
+                    <ul>
+                        <li><strong>Select Language:</strong> Choose your programming language from the dropdown</li>
+                        <li><strong>Load Examples:</strong> Pick an example to see sample code</li>
+                        <li><strong>Write Code:</strong> Type or paste your code in the editor</li>
+                        <li><strong>Share code:</strong> Generate URL of your current project</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>⚡ Execution</h3>
+                    <ul>
+                        <li><strong>Compile:</strong> Check syntax and compile your code</li>
+                        <li><strong>Run:</strong> Execute your program</li>
+                        <li><strong>Verify:</strong> Use AutoProof verification (Eiffel only)</li>
+                        <li><strong>Cancel:</strong> Stop long-running processes</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>📁 Multi-File Projects</h3>
+                    <ul>
+                        <li><strong>Add Files:</strong> Click <kbd>+</kbd> button or press <kbd>Ctrl+N</kbd></li>
+                        <li><strong>Switch Tabs:</strong> Click tabs or use <kbd>Shift+1-9</kbd></li>
+                        <li><strong>Rename Files:</strong> Double-click tab names</li>
+                        <li><strong>Close Files:</strong> Click <kbd>×</kbd> on tabs or press <kbd>Ctrl+W</kbd></li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h3>⌨️ Keyboard Shortcuts</h3>
+                    <ul>
+                        <li><strong>Help:</strong> Press <kbd>Shift+?</kbd> for full shortcut list</li>
+                        <li><strong>Compile:</strong> <kbd>C</kbd> • <strong>Run:</strong> <kbd>R</kbd></li>
+                        <li><strong>Library Browser:</strong> <kbd>B</kbd> (Eiffel)</li>
+                        <li><strong>Close Output:</strong> <kbd>O</kbd> or <kbd>Esc</kbd></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="quick-guide-footer">
+                <label class="dont-show-again">
+                    <input type="checkbox" id="dont-show-guide-again"> Don't show this again
+                </label>
+                <button id="got-it-btn" class="btn btn-primary">Got it!</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

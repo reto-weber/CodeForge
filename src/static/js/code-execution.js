@@ -45,7 +45,7 @@ class CodeExecutionManager {
                     name: file.name,
                     content: file.content
                 })),
-                main_file: this.fileManager.getActiveFile()?.name || files[0].name
+                main_file: files[0].name
             };
         } else {
             // Single file support (legacy)

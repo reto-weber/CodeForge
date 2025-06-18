@@ -63,7 +63,6 @@
     background-color: #2d3748;
     color: #e2e8f0;
     padding: 2rem 0;
-    margin-top: 4rem;
 }
 
 .footer-content {
@@ -408,95 +407,6 @@
     border-bottom-color: #f56565;
 }
 
-/* Eiffel Class Name Mappings */
-.mapping-info {
-    margin: 1rem 0;
-    display: none;
-}
-
-.mapping-notice {
-    background-color: #e6f3ff;
-    border: 1px solid #63b3ed;
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.mapping-icon {
-    font-size: 1rem;
-}
-
-.mapping-text {
-    flex: 1;
-    color: #2c5aa0;
-}
-
-.mapping-close {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    color: #718096;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    width: 1.5rem;
-    height: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 3px;
-}
-
-.mapping-close:hover {
-    background-color: rgba(113, 128, 150, 0.1);
-    color: #4a5568;
-}
-
-.mappings-controls {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.mappings-controls .btn {
-    font-size: 0.875rem;
-    padding: 0.5rem 0.75rem;
-}
-
-.mappings-list {
-    list-style: none;
-    padding: 0;
-    margin: 1rem 0;
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-}
-
-.mappings-list li {
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid #f7fafc;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.mappings-list li:last-child {
-    border-bottom: none;
-}
-
-.mappings-list code {
-    background-color: #f7fafc;
-    padding: 0.25rem 0.5rem;
-    border-radius: 3px;
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-    font-size: 0.875rem;
-    color: #2d3748;
-}
-
 /* Share Code URL */
 .editor-share-url {
     margin-top: 1rem;
@@ -557,4 +467,199 @@
     position: relative;
     margin: 0 0.5rem 0 0;
     vertical-align: baseline;
+}
+
+/* Quick Guide Overlay */
+.quick-guide-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30, 41, 59, 0.9);
+    backdrop-filter: blur(4px);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.quick-guide-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.quick-guide-content {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    max-width: 700px;
+    max-height: 90vh;
+    width: 90vw;
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.quick-guide-overlay.show .quick-guide-content {
+    transform: scale(1);
+}
+
+.quick-guide-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quick-guide-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.close-guide-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.close-guide-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.quick-guide-body {
+    padding: 2rem;
+    max-height: 60vh;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.guide-section {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border-left: 4px solid #667eea;
+}
+
+.guide-section h3 {
+    margin: 0 0 1rem 0;
+    color: #2d3748;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.guide-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.guide-section li {
+    margin: 0.75rem 0;
+    color: #4a5568;
+    line-height: 1.5;
+}
+
+.guide-section li strong {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.guide-section kbd {
+    background: #667eea;
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin: 0 0.1rem;
+}
+
+.quick-guide-footer {
+    background: #f7fafc;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dont-show-again {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #4a5568;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.dont-show-again input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #667eea;
+}
+
+#got-it-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#got-it-btn:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+}
+
+/* Responsive design for guide */
+@media (max-width: 768px) {
+    .quick-guide-content {
+        width: 95vw;
+        max-height: 95vh;
+    }
+
+    .quick-guide-header {
+        padding: 1rem 1.5rem;
+    }
+
+    .quick-guide-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .quick-guide-body {
+        padding: 1.5rem;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .guide-section {
+        padding: 1rem;
+    }
+
+    .quick-guide-footer {
+        padding: 1rem 1.5rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
 }

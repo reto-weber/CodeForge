@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let collapsed = false;
     let lastToggle = 0;
     const COLLAPSE_CLASS = 'collapsed';
-    const THROTTLE_MS = 1000;
+    const THROTTLE_MS = 150;
 
     function setCollapsed(state) {
         if (collapsed === state) return;
