@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  codeforge-standalone:
+    build:
+      context: .
+      dockerfile: Dockerfile.standalone
+    container_name: codeforge-server
+    ports:
+      - "8000:8000"      # FastAPI server
+      - "2376:2376"      # Docker API (optional, for debugging)
+    privileged: true     # Required for Docker-in-Docker
+    volumes:
+      - codeforge-data:/app/data
+      - codeforge-logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - CODEFORGE_ENV=docker
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+volumes:
+  codeforge-data:
+    driver: local
+  codeforge-logs:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

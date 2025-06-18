@@ -1,0 +1,51 @@
+# Dockerfile for CodeForge Standalone Server with Docker-in-Docker
+FROM docker:27-dind
+
+# Install Python and build dependencies
+RUN apk add --no-cache \
+    python3 \
+    python3-dev \
+    py3-pip \
+    gcc \
+    musl-dev \
+    linux-headers \
+    libffi-dev \
+    openssl-dev \
+    bash \
+    curl \
+    git \
+    && ln -sf python3 /usr/bin/python
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
+
+# Copy application code
+COPY src/ ./src/
+COPY examples/ ./examples/
+COPY docker/ ./docker/
+
+# Create necessary directories
+RUN mkdir -p /tmp/code_execution \
+    && mkdir -p /app/logs \
+    && mkdir -p /app/data
+
+# Copy and set executable permissions for scripts
+COPY docker/start-standalone.sh /start-standalone.sh
+RUN chmod +x /start-standalone.sh \
+    && chmod +x /app/docker/build-images.sh
+
+# Expose ports
+EXPOSE 8000 2376
+
+# Set environment variables
+ENV PYTHONPATH=/app \
+    DOCKER_HOST=unix:///var/run/docker.sock \
+    DOCKER_TLS_CERTDIR="" \
+    CODEFORGE_ENV=docker
+
+# Start the application
+CMD ["/start-standalone.sh"]

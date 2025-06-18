@@ -152,6 +152,30 @@ async def get_favicon():
         raise HTTPException(status_code=404, detail="Favicon not found")
 
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker and monitoring systems."""
+    try:
+        # Check if Docker is available
+        container_mgr = get_container_manager()
+        docker_status = "healthy"
+        try:
+            container_mgr.client.ping()
+        except Exception:
+            docker_status = "unavailable"
+        
+        return {
+            "status": "healthy",
+            "timestamp": time.time(),
+            "docker": docker_status,
+            "active_sessions": len(user_sessions),
+            "active_processes": len(active_processes),
+            "supported_languages": list(CONFIG["supported_languages"].keys())
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")
+
+
 def background_cleanup():
     container_mgr = get_container_manager()
     while True:
