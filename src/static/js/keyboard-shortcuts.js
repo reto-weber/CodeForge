@@ -28,7 +28,7 @@
             '<h2>Keyboard Shortcuts</h2>' +
             '<ul>' +
             keyMap.map(k => `<li><b>${k.key}</b>: ${k.label}</li>`).join('') +
-            '<li><b style="color:#60a5fa;">Shift+[1-9]</b>: Go to tab 1-9 (Shift+1 prioritizes root files)</li>' +
+            '<li><b style="color:#60a5fa;">Shift+[1-9]</b>: Go to tab 1-9</li>' +
             '</ul>' +
             '<p>Press <b>Esc</b> to close</p>' +
             '</div>';
