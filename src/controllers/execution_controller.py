@@ -157,12 +157,14 @@ async def run_code(
     execution_id = increment_process_counter()
     update_session_activity(session_id)
 
-    if CONFIG is None or language not in CONFIG.compilers:
+    if CONFIG is None or language not in CONFIG["supported_languages"]:
         print(f"DEBUG: CONFIG is None: {CONFIG is None}")
         if CONFIG is not None:
-            print(f"DEBUG: CONFIG.compilers: {CONFIG.compilers}")
             print(
-                f"DEBUG: language '{language}' in CONFIG.compilers: {language in CONFIG.compilers}"
+                f"DEBUG: CONFIG['supported_languages']: {CONFIG['supported_languages']}"
+            )
+            print(
+                f"DEBUG: language '{language}' in CONFIG['supported_languages']: {language in CONFIG['supported_languages']}"
             )
         raise HTTPException(status_code=400, detail=f"Unsupported language: {language}")
 
@@ -281,7 +283,7 @@ async def verify_code(
             detail=f"Verification not supported for language: {language}",
         )
 
-    if CONFIG is None or language not in CONFIG.compilers:
+    if CONFIG is None or language not in CONFIG["supported_languages"]:
         raise HTTPException(status_code=400, detail=f"Unsupported language: {language}")
 
     active_processes[execution_id] = ActiveProcess(

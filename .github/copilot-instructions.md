@@ -12,7 +12,7 @@ This is a Python FastAPI web application for compiling and running code in multi
 
 ## Key Features
 
-- **Language Support**: Configured through `config/compiler_config.json`
+- **Language Support**: Configured through `config/languages.json`
 - **Secure Execution**: Uses temporary files and subprocess isolation
 - **Configurable Commands**: Both compilation and execution commands can be customized
 - **Verbose Output**: Displays detailed compilation and runtime information

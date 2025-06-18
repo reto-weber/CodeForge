@@ -455,12 +455,6 @@
     color: #4a5568;
 }
 
-.mappings-management {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e2e8f0;
-}
-
 .mappings-controls {
     display: flex;
     gap: 0.75rem;
@@ -503,6 +497,37 @@
     color: #2d3748;
 }
 
+/* Share Code URL */
+.editor-share-url {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.share-url-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.5rem 1rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+    background-color: #f7fafc;
+    color: #2d3748;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.share-url-input:focus {
+    outline: none;
+    border-color: #3182ce;
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.1);
+}
+
+#share-url-btn {
+    min-width: 120px;
+}
+
 /* Responsive design */
 @media (max-width: 640px) {
     .modal {
@@ -524,4 +549,12 @@
     .modal-footer .btn {
         width: 100%;
     }
+}
+
+.logo-section img {
+    width: 1.7rem;
+    /* top: -0.1rem; */
+    position: relative;
+    margin: 0 0.5rem 0 0;
+    vertical-align: baseline;
 }

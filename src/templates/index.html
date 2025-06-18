@@ -30,7 +30,7 @@
                         of Technology</a>
                     <span class="department">Chair of Software Engineering</span>
                 </div>
-                <h1>CodeForge</h1>
+                <h1><img src="favicon.ico">CodeForge</h1>
                 <p class="subtitle">Multi-language code execution and verification platform for academic research</p>
             </div>
         </div>
@@ -47,7 +47,7 @@
                         <select id="language" data-default-language="{{ default_language }}">
                             {% for lang in languages %}
                             <option value="{{ lang }}" {% if lang==default_language %}selected{% endif %}>
-                                {{ lang|capitalize }}
+                                {{ languages[lang]["name"] }}
                             </option>
                             {% endfor %}
                         </select>
@@ -94,6 +94,15 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Share Code URL Section -->
+                <div class="editor-share-url"
+                    style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <button id="share-url-btn" class="btn btn-outline" title="Generate shareable URL">Share Code
+                        URL</button>
+                    <input id="share-url-output" type="text" class="share-url-input" readonly
+                        style="flex:1; min-width: 200px;" placeholder="Shareable URL will appear here...">
+                </div>
             </section>
 
             <!-- Output Section -->
@@ -130,12 +139,6 @@
                             <button class="quick-class-btn btn btn-outline" data-class="DOUBLE">DOUBLE</button>
                             <button class="quick-class-btn btn btn-outline" data-class="REAL">REAL</button>
                         </div>
-                        <p class="library-help-text">
-                            Browse Eiffel library classes by entering the class name. Legacy class names (like STRING,
-                            DOUBLE, REAL)
-                            will be automatically mapped to their modern equivalents (STRING_8, REAL_64, REAL_32).
-                        </p>
-                        interface using 'eiffel-studio -flat'.
                         </p>
                     </div>
                     <div class="library-output-container">

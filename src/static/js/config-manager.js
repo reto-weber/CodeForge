@@ -59,7 +59,7 @@ class ConfigManager {
                 this.ui.updateStatus('Configuration saved successfully', true);
 
                 // Update language selector if languages changed
-                if (config.compilers) {
+                if (config.supported_languages) {
                     await this.updateLanguageSelector(config);
                 }
             } else {
@@ -73,7 +73,8 @@ class ConfigManager {
 
     // Update language selector when configuration changes
     async updateLanguageSelector(config) {
-        const languages = Object.keys(config.compilers);
+        // Use supported_languages instead of compilers
+        const languages = Object.keys(config.supported_languages);
         const currentLanguage = this.dom.language.value;
 
         // Clear options

@@ -16,7 +16,7 @@ from controllers.admin_controller import router as admin_router
 from controllers.admin_controller import set_globals as set_admin_globals
 from controllers.code_controller import router as code_router
 from controllers.code_controller import set_globals as set_code_globals
-from models import ActiveProcess, CompilerConfig, UserSession
+from models import ActiveProcess, UserSession
 
 # Global variables for process management
 active_processes: Dict[str, ActiveProcess] = {}
@@ -25,31 +25,44 @@ PROCESS_COUNTER = 0
 
 
 # Load configuration
-def load_config() -> CompilerConfig:
+def load_config() -> dict:
     config_dir = os.path.join(os.path.dirname(__file__), "config")
-    config_path = os.path.join(config_dir, "compiler_config.json")
+    config_path = os.path.join(config_dir, "languages.json")
     try:
         with open(config_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return CompilerConfig(**data)
+            return data
     except FileNotFoundError:
         # Fallback to default config
         default_config = {
-            "compilers": ["python", "c", "cpp", "java", "eiffel"],
+            "supported_languages": {
+                "eiffel": {
+                    "name": "Eiffel",
+                    "executor_class": "EiffelExecutor",
+                    "file_extension": ".e",
+                    "description": "Eiffel programming language",
+                    "enabled": True,
+                },
+            },
             "default_language": "eiffel",
+            "timeout_limits": {"min": 5, "max": 300, "default": 30},
+            "compiler_settings": {
+                "max_file_size": "10MB",
+                "temp_dir": "/tmp/code_execution",
+            },
         }
         os.makedirs(config_dir, exist_ok=True)
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(default_config, f, indent=4)
-        return CompilerConfig(**default_config)
+        return default_config
 
 
 CONFIG = load_config()
 
 app = FastAPI(
-    title="Code Compiler and Runner API",
+    title="CodeForge",
     description="""
-    A comprehensive code compilation and execution platform supporting multiple
+    A comprehensive code compilation, execution and verification platform supporting multiple
     programming languages.
 
     ## Features
@@ -113,13 +126,13 @@ async def get_home(request: Request, session_id: Optional[str] = Cookie(None)):
         session_id = new_session_id
     else:
         user_sessions[session_id].last_used = time.time()
-    languages = list(CONFIG.compilers)
+    languages = list(CONFIG["supported_languages"])
     response = templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "languages": languages,
-            "default_language": CONFIG.default_language,
+            "languages": CONFIG["supported_languages"],
+            "default_language": CONFIG["default_language"],
         },
     )
     response.set_cookie(

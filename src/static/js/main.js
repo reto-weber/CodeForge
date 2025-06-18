@@ -98,12 +98,33 @@ class CodeCompilerApp {
             }
         });
 
-        // Keyboard shortcut to close output (Escape key)
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.dom.outputSection && this.dom.outputSection.style.display !== 'none') {
-                this.ui.clearOutput();
-            }
-        });
+        // Share Code URL button
+        const shareUrlBtn = document.getElementById('share-url-btn');
+        const shareUrlOutput = document.getElementById('share-url-output');
+        if (shareUrlBtn && shareUrlOutput) {
+            shareUrlBtn.addEventListener('click', () => {
+                let lang = this.dom.language.value;
+                let files = [];
+                let activeFile = null;
+                if (this.fileManager) {
+                    files = this.fileManager.getAllFiles().map(f => ({ name: f.name, content: f.content }));
+                    activeFile = this.fileManager.getActiveFile()?.name || (files[0] && files[0].name);
+                } else {
+                    files = [{ name: 'main.' + lang, content: this.codeEditor.getCodeContent() }];
+                    activeFile = files[0].name;
+                }
+                let data = { lang, files, activeFile };
+                let encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+                let baseUrl = window.location.origin + window.location.pathname;
+                let params = new URLSearchParams();
+                params.set('files', encoded);
+                let shareUrl = `${baseUrl}?${params.toString()}`;
+                shareUrlOutput.value = shareUrl;
+                shareUrlOutput.style.display = 'block';
+                shareUrlOutput.focus();
+                shareUrlOutput.select();
+            });
+        }
 
         console.log('Event listeners set up');
     }
@@ -117,9 +138,60 @@ class CodeCompilerApp {
     async initialize() {
         console.log('Starting application initialization...');
 
-        // Initialize examples and set default code
+        // Check for files/lang in URL params (for shareable links)
+        const params = new URLSearchParams(window.location.search);
+        let filesRestoredFromUrl = false;
+        if (params.has('files')) {
+            try {
+                const data = JSON.parse(decodeURIComponent(escape(atob(params.get('files')))));
+                if (data.lang && this.dom.language.value !== data.lang) {
+                    this.dom.language.value = data.lang;
+                    this.codeEditor.updateCodeMirrorMode();
+                }
+                if (data.files && Array.isArray(data.files) && this.fileManager) {
+                    // Remove all current files
+                    this.fileManager.files.clear();
+                    document.getElementById('file-tabs').innerHTML = '';
+                    // Add files from URL
+                    let firstId = null;
+                    data.files.forEach((f, idx) => {
+                        const id = this.fileManager.createFile(f.name, f.content, null, false);
+                        if (idx === 0) firstId = id;
+                    });
+                    // Set active file
+                    let activeId = null;
+                    for (let [id, file] of this.fileManager.files.entries()) {
+                        if (file.name === data.activeFile) {
+                            activeId = id;
+                            break;
+                        }
+                    }
+                    this.fileManager.switchToFile(activeId || firstId);
+                    filesRestoredFromUrl = true;
+                }
+            } catch (e) {
+                console.warn('Failed to decode shared files from URL:', e);
+            }
+        } else if (params.has('code')) {
+            try {
+                const code = decodeURIComponent(escape(atob(params.get('code'))));
+                const lang = params.get('lang');
+                if (lang && this.dom.language.value !== lang) {
+                    this.dom.language.value = lang;
+                    this.codeEditor.updateCodeMirrorMode();
+                }
+                this.codeEditor.setCodeContent(code);
+                filesRestoredFromUrl = true;
+            } catch (e) {
+                console.warn('Failed to decode shared code from URL:', e);
+            }
+        }
+
+        // Initialize examples and set default code only if no files restored from URL
         await this.examplesManager.loadAvailableExamples();
-        await this.examplesManager.setExampleCode(this.dom.language.value);
+        if (!filesRestoredFromUrl && (!this.fileManager.files || this.fileManager.files.size === 0)) {
+            await this.examplesManager.setExampleCode(this.dom.language.value);
+        }
 
         // Set initial verify button visibility
         this.ui.updateVerifyButtonVisibility(this.dom.language.value);

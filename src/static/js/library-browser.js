@@ -8,7 +8,6 @@ class EiffelLibraryBrowser {
         this.libraryEditor = null; // CodeMirror instance for library output
         this.initializeElements();
         this.bindEvents();
-        this.addMappingsManagement();
     }
 
     initializeElements() {
@@ -412,41 +411,6 @@ class EiffelLibraryBrowser {
         } catch (error) {
             console.error('Error reloading mappings:', error);
             this.showStatus(`Error reloading mappings: ${error.message}`, 'error');
-        }
-    }
-
-    /**
-     * Add a quick access button for mappings management
-     */
-    addMappingsManagement() {
-        const librarySearch = document.querySelector('.library-search');
-        if (!librarySearch) return;
-
-        const mappingsManagement = document.createElement('div');
-        mappingsManagement.className = 'mappings-management';
-        mappingsManagement.innerHTML = `
-            <div class="mappings-controls">
-                <button class="btn btn-outline mappings-reload-btn" title="Reload class name mappings">
-                    🔄 Reload Mappings
-                </button>
-                <button class="btn btn-outline mappings-show-btn" title="Show available mappings">
-                    📋 Show Mappings
-                </button>
-            </div>
-        `;
-
-        librarySearch.appendChild(mappingsManagement);
-
-        // Add event listeners
-        const reloadBtn = mappingsManagement.querySelector('.mappings-reload-btn');
-        const showBtn = mappingsManagement.querySelector('.mappings-show-btn');
-
-        if (reloadBtn) {
-            reloadBtn.addEventListener('click', () => this.reloadMappings());
-        }
-
-        if (showBtn) {
-            showBtn.addEventListener('click', () => this.showMappingsDialog());
         }
     }
 

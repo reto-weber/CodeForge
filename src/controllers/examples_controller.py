@@ -64,11 +64,12 @@ async def get_example_code(language: str, filename: str):
     try:
         print(f"DEBUG: CONFIG is None: {CONFIG is None}")
         if CONFIG is not None:
-            print(f"DEBUG: CONFIG.compilers: {CONFIG.compilers}")
             print(
-                f"DEBUG: language '{language}' in CONFIG.compilers: {language in CONFIG.compilers}"
+                f"DEBUG: CONFIG['supported_languages']: {CONFIG['supported_languages']}"
             )
-        if CONFIG is None or language not in CONFIG.compilers:
+            lang_supported = language in CONFIG["supported_languages"]
+            print(f"DEBUG: lang '{language}' in supported: {lang_supported}")
+        if CONFIG is None or language not in CONFIG["supported_languages"]:
             raise HTTPException(
                 status_code=400, detail=f"Unsupported language: {language}"
             )

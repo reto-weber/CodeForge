@@ -456,7 +456,6 @@ ap_online/
 │   │   ├── java_executor.py   # Java code execution
 │   │   └── eiffel_executor.py # Eiffel code execution
 │   ├── config/
-│   │   ├── compiler_config.json # Compiler configuration
 │   │   └── languages.json       # Language definitions
 │   ├── static/            # Static web assets
 │   │   ├── favicon.svg    # Application favicon

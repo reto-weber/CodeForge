@@ -57,7 +57,7 @@ class FileManager {
             this.dom.language.value = currentLanguage;
         }
 
-        this.createFile(defaultFilename, '', 'main', true);
+        // this.createFile(defaultFilename, '', 'main', true);
     }
 
     setupEventListeners() {
@@ -343,7 +343,7 @@ class FileManager {
             'cpp': 'cpp',
             'cc': 'cpp',
             'cxx': 'cpp',
-            'c++': 'cpp',
+            'cpp': 'cpp',
             'h': 'c',
             'hpp': 'cpp',
             'hxx': 'cpp',
