@@ -10,6 +10,7 @@
     top: 0;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: padding 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 
 .header-content {
@@ -52,6 +53,7 @@
     font-weight: 700;
     color: #ffffff;
     margin: 0.5rem 0 0.25rem 0;
+    transition: font-size 0.3s cubic-bezier(0.4,0,0.2,1), margin 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 
 .subtitle {
@@ -78,4 +80,21 @@
 .main-nav a:hover {
     color: #ffffff;
     border-bottom-color: #60a5fa;
+}
+
+/* Collapsed header: shrink to one line, hide subtitle and department, reduce padding */
+.site-header.collapsed {
+    padding: 0.2rem 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.site-header.collapsed .subtitle,
+.site-header.collapsed .department {
+    display: none !important;
+}
+.site-header.collapsed .logo-section h1 {
+    font-size: 1.2rem;
+    margin: 0;
+}
+.site-header.collapsed .header-content {
+    padding: 0 1rem;
 }

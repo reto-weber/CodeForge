@@ -78,9 +78,9 @@ class LanguageExecutor(ABC):
         # Write files to container
         for file_info in files:
             # Prepend BOM for Eiffel files if not present
-            if file_info.name.lower().endswith('.e'):
-                if not file_info.content.startswith('\ufeff'):
-                    file_info.content = '\ufeff' + file_info.content
+            if file_info.name.lower().endswith(".e"):
+                if not file_info.content.startswith("\ufeff"):
+                    file_info.content = "\ufeff" + file_info.content
             if not container_mgr.put_file_in_container(
                 session_id, file_info.name, file_info.content
             ):
