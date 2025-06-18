@@ -107,6 +107,10 @@ class EiffelExecutor(LanguageExecutor):
             if not self.container_mgr.create_session_container(session_id, "eiffel"):
                 return False, "Failed to create compilation container", None
 
+        # Prepend BOM if not present
+        if not code.startswith("\ufeff"):
+            code = "\ufeff" + code
+
         class_name = self._get_class_name(code)
         filename = f"{class_name.lower()}.e"
         if not self.container_mgr.put_file_in_container(session_id, filename, code):
