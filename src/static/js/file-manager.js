@@ -57,7 +57,11 @@ class FileManager {
             this.dom.language.value = currentLanguage;
         }
 
-        // this.createFile(defaultFilename, '', 'main', true);
+        // Create the initial file only if no files exist yet
+        // This will be populated with content later by the examples manager
+        if (this.files.size === 0) {
+            this.createFile(defaultFilename, '', 'main', true);
+        }
     }
 
     setupEventListeners() {

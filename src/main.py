@@ -163,14 +163,14 @@ async def health_check():
             container_mgr.client.ping()
         except Exception:
             docker_status = "unavailable"
-        
+
         return {
             "status": "healthy",
             "timestamp": time.time(),
             "docker": docker_status,
             "active_sessions": len(user_sessions),
             "active_processes": len(active_processes),
-            "supported_languages": list(CONFIG["supported_languages"].keys())
+            "supported_languages": list(CONFIG["supported_languages"].keys()),
         }
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")

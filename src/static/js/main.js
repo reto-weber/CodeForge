@@ -101,28 +101,88 @@ class CodeCompilerApp {
         // Share Code URL button
         const shareUrlBtn = document.getElementById('share-url-btn');
         const shareUrlOutput = document.getElementById('share-url-output');
+        const compressionInfo = document.getElementById('compression-info');
         if (shareUrlBtn && shareUrlOutput) {
-            shareUrlBtn.addEventListener('click', () => {
-                let lang = this.dom.language.value;
-                let files = [];
-                let activeFile = null;
-                if (this.fileManager) {
-                    files = this.fileManager.getAllFiles().map(f => ({ name: f.name, content: f.content }));
-                    activeFile = this.fileManager.getActiveFile()?.name || (files[0] && files[0].name);
-                } else {
-                    files = [{ name: 'main.' + lang, content: this.codeEditor.getCodeContent() }];
-                    activeFile = files[0].name;
+            shareUrlBtn.addEventListener('click', async () => {
+                try {
+                    shareUrlBtn.disabled = true;
+                    shareUrlBtn.textContent = 'Generating...';
+
+                    let lang = this.dom.language.value;
+                    let files = [];
+                    let activeFile = null;
+
+                    if (this.fileManager) {
+                        files = this.fileManager.getAllFiles().map(f => ({ name: f.name, content: f.content }));
+                        activeFile = this.fileManager.getActiveFile()?.name || (files[0] && files[0].name);
+                    } else {
+                        files = [{ name: 'main.' + lang, content: this.codeEditor.getCodeContent() }];
+                        activeFile = files[0].name;
+                    }
+
+                    let data = { lang, files, activeFile };
+                    let baseUrl = window.location.origin + window.location.pathname;
+
+                    // Try compressed URL first
+                    let shareUrl;
+                    let compressionUsed = false;
+
+                    if (window.URLCompression && URLCompression.isSupported()) {
+                        shareUrl = await URLCompression.generateShareableURL(baseUrl, data);
+                        compressionUsed = true;
+
+                        // Show compression stats
+                        const originalSize = JSON.stringify(data).length;
+                        const compressedSize = new URL(shareUrl).searchParams.get('c').length;
+                        const ratio = ((1 - compressedSize / originalSize) * 100).toFixed(0);
+                        const urlLength = shareUrl.length;
+
+                        if (compressionInfo) {
+                            compressionInfo.textContent = `Compressed ${ratio}% (${urlLength} chars)`;
+                            compressionInfo.style.display = 'block';
+                            compressionInfo.style.color = urlLength < 2000 ? '#10b981' : urlLength < 4000 ? '#f59e0b' : '#ef4444';
+                        }
+
+                        console.log(`URL compressed: ${originalSize} → ${compressedSize} bytes (${100 - ratio}% of original)`);
+                    } else {
+                        // Fallback to old method
+                        console.warn('Compression not supported, using fallback encoding');
+                        let encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+                        let params = new URLSearchParams();
+                        params.set('files', encoded);
+                        shareUrl = `${baseUrl}?${params.toString()}`;
+
+                        if (compressionInfo) {
+                            compressionInfo.textContent = `Uncompressed (${shareUrl.length} chars)`;
+                            compressionInfo.style.display = 'block';
+                            compressionInfo.style.color = '#6b7280';
+                        }
+                    }
+
+                    shareUrlOutput.value = shareUrl;
+                    shareUrlOutput.style.display = 'block';
+                    shareUrlOutput.focus();
+                    shareUrlOutput.select();
+
+                    // Copy to clipboard if possible
+                    if (navigator.clipboard) {
+                        try {
+                            await navigator.clipboard.writeText(shareUrl);
+                            this.ui.updateStatus(`Share URL ${compressionUsed ? '(compressed) ' : ''}copied to clipboard!`, true);
+                        } catch (clipboardError) {
+                            console.warn('Could not copy to clipboard:', clipboardError);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error generating share URL:', error);
+                    this.ui.updateStatus('Error generating share URL: ' + error.message, false);
+                    if (compressionInfo) {
+                        compressionInfo.style.display = 'none';
+                    }
+                } finally {
+                    shareUrlBtn.disabled = false;
+                    shareUrlBtn.textContent = 'Share Code URL';
                 }
-                let data = { lang, files, activeFile };
-                let encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-                let baseUrl = window.location.origin + window.location.pathname;
-                let params = new URLSearchParams();
-                params.set('files', encoded);
-                let shareUrl = `${baseUrl}?${params.toString()}`;
-                shareUrlOutput.value = shareUrl;
-                shareUrlOutput.style.display = 'block';
-                shareUrlOutput.focus();
-                shareUrlOutput.select();
             });
         }
 
@@ -141,49 +201,97 @@ class CodeCompilerApp {
         // Check for files/lang in URL params (for shareable links)
         const params = new URLSearchParams(window.location.search);
         let filesRestoredFromUrl = false;
-        if (params.has('files')) {
+
+        // Try parsing with compression utility first
+        if (window.URLCompression) {
             try {
-                const data = JSON.parse(decodeURIComponent(escape(atob(params.get('files')))));
-                if (data.lang && this.dom.language.value !== data.lang) {
-                    this.dom.language.value = data.lang;
-                    this.codeEditor.updateCodeMirrorMode();
-                }
-                if (data.files && Array.isArray(data.files) && this.fileManager) {
-                    // Remove all current files
-                    this.fileManager.files.clear();
-                    document.getElementById('file-tabs').innerHTML = '';
-                    // Add files from URL
-                    let firstId = null;
-                    data.files.forEach((f, idx) => {
-                        const id = this.fileManager.createFile(f.name, f.content, null, false);
-                        if (idx === 0) firstId = id;
-                    });
-                    // Set active file
-                    let activeId = null;
-                    for (let [id, file] of this.fileManager.files.entries()) {
-                        if (file.name === data.activeFile) {
-                            activeId = id;
-                            break;
-                        }
+                const data = await URLCompression.parseFromURL(params);
+                if (data && data.files && Array.isArray(data.files)) {
+                    // Set language if provided
+                    if (data.lang && this.dom.language.value !== data.lang) {
+                        this.dom.language.value = data.lang;
+                        this.codeEditor.updateCodeMirrorMode();
                     }
-                    this.fileManager.switchToFile(activeId || firstId);
-                    filesRestoredFromUrl = true;
+
+                    if (this.fileManager) {
+                        // Remove all current files
+                        this.fileManager.files.clear();
+                        document.getElementById('file-tabs').innerHTML = '';
+
+                        // Add files from URL
+                        let firstId = null;
+                        data.files.forEach((f, idx) => {
+                            const id = this.fileManager.createFile(f.name, f.content, null, false);
+                            if (idx === 0) firstId = id;
+                        });
+
+                        // Set active file
+                        let activeId = null;
+                        if (data.activeFile) {
+                            for (let [id, file] of this.fileManager.files.entries()) {
+                                if (file.name === data.activeFile) {
+                                    activeId = id;
+                                    break;
+                                }
+                            }
+                        }
+                        this.fileManager.switchToFile(activeId || firstId);
+                        filesRestoredFromUrl = true;
+
+                        console.log(`Restored ${data.files.length} files from compressed URL`);
+                    }
                 }
-            } catch (e) {
-                console.warn('Failed to decode shared files from URL:', e);
+            } catch (error) {
+                console.warn('Failed to parse compressed URL data:', error);
             }
-        } else if (params.has('code')) {
-            try {
-                const code = decodeURIComponent(escape(atob(params.get('code'))));
-                const lang = params.get('lang');
-                if (lang && this.dom.language.value !== lang) {
-                    this.dom.language.value = lang;
-                    this.codeEditor.updateCodeMirrorMode();
+        }
+
+        // Legacy fallback handling for old URL formats
+        if (!filesRestoredFromUrl) {
+            if (params.has('files')) {
+                try {
+                    const data = JSON.parse(decodeURIComponent(escape(atob(params.get('files')))));
+                    if (data.lang && this.dom.language.value !== data.lang) {
+                        this.dom.language.value = data.lang;
+                        this.codeEditor.updateCodeMirrorMode();
+                    }
+                    if (data.files && Array.isArray(data.files) && this.fileManager) {
+                        // Remove all current files
+                        this.fileManager.files.clear();
+                        document.getElementById('file-tabs').innerHTML = '';
+                        // Add files from URL
+                        let firstId = null;
+                        data.files.forEach((f, idx) => {
+                            const id = this.fileManager.createFile(f.name, f.content, null, false);
+                            if (idx === 0) firstId = id;
+                        });
+                        // Set active file
+                        let activeId = null;
+                        for (let [id, file] of this.fileManager.files.entries()) {
+                            if (file.name === data.activeFile) {
+                                activeId = id;
+                                break;
+                            }
+                        }
+                        this.fileManager.switchToFile(activeId || firstId);
+                        filesRestoredFromUrl = true;
+                    }
+                } catch (e) {
+                    console.warn('Failed to decode shared files from URL:', e);
                 }
-                this.codeEditor.setCodeContent(code);
-                filesRestoredFromUrl = true;
-            } catch (e) {
-                console.warn('Failed to decode shared code from URL:', e);
+            } else if (params.has('code')) {
+                try {
+                    const code = decodeURIComponent(escape(atob(params.get('code'))));
+                    const lang = params.get('lang');
+                    if (lang && this.dom.language.value !== lang) {
+                        this.dom.language.value = lang;
+                        this.codeEditor.updateCodeMirrorMode();
+                    }
+                    this.codeEditor.setCodeContent(code);
+                    filesRestoredFromUrl = true;
+                } catch (e) {
+                    console.warn('Failed to decode shared code from URL:', e);
+                }
             }
         }
 

@@ -121,7 +121,36 @@ class ExamplesManager {
             const result = await response.json();
 
             if (response.ok) {
-                this.codeEditor.setCodeContent(result.code);
+                // If there's a file manager and we have files, update the active file
+                if (window.fileManager && window.fileManager.files.size > 0) {
+                    const activeFile = window.fileManager.getActiveFile();
+                    if (activeFile) {
+                        // Update the active file's content and name
+                        activeFile.content = result.code;
+                        activeFile.name = selectedExample;
+                        activeFile.extension = window.fileManager.getFileExtension(selectedExample);
+                        activeFile.language = window.fileManager.getLanguageFromExtension(activeFile.extension);
+
+                        // Update tab display
+                        const tabElement = document.querySelector(`[data-file-id="${activeFile.id}"]`);
+                        if (tabElement) {
+                            const tabName = tabElement.querySelector('.tab-name');
+                            if (tabName) {
+                                tabName.textContent = selectedExample;
+                            }
+                        }
+
+                        // Update editor content
+                        this.codeEditor.setCodeContent(result.code);
+                    }
+                } else if (window.fileManager && window.fileManager.files.size === 0) {
+                    // No files exist, create a new one
+                    window.fileManager.createFile(selectedExample, result.code, null, true);
+                } else {
+                    // Fallback: just set the editor content
+                    this.codeEditor.setCodeContent(result.code);
+                }
+
                 this.ui.updateStatus(`Loaded example: ${selectedExample}`, true);
 
                 // Reset compilation paths when loading new code
@@ -141,6 +170,8 @@ class ExamplesManager {
     async setExampleCode(language) {
         try {
             const defaultFile = this.defaultExamples[language];
+            let code = '';
+            let filename = '';
 
             if (defaultFile && this.availableExamples[language] && this.availableExamples[language][defaultFile]) {
                 // Load the default example file
@@ -148,18 +179,76 @@ class ExamplesManager {
                 const result = await response.json();
 
                 if (response.ok) {
-                    this.codeEditor.setCodeContent(result.code);
-                    return;
+                    code = result.code;
+                    filename = defaultFile;
                 }
             }
 
             // Fallback to simple placeholder if no example available
-            const placeholderCode = this.getPlaceholderCode(language);
-            this.codeEditor.setCodeContent(placeholderCode);
+            if (!code) {
+                code = this.getPlaceholderCode(language);
+                // Use default filename for the language
+                const defaultNames = {
+                    'python': 'main.py',
+                    'c': 'main.c',
+                    'cpp': 'main.cpp',
+                    'java': 'Main.java',
+                    'eiffel': 'main.e'
+                };
+                filename = defaultNames[language] || 'main.txt';
+            }
+
+            // If there's a file manager, work with existing files or create a new one
+            if (window.fileManager) {
+                if (window.fileManager.files.size === 0) {
+                    // No files exist, create a new one
+                    window.fileManager.createFile(filename, code, 'default', true);
+                } else {
+                    // Files exist, update the active file with the new content
+                    const activeFile = window.fileManager.getActiveFile();
+                    if (activeFile) {
+                        // Update the file properties
+                        activeFile.content = code;
+
+                        // Update the tab name if it's still the default
+                        if (activeFile.name.startsWith('main.') || activeFile.id === 'main') {
+                            window.fileManager.renameFile(activeFile.id, filename);
+                        }
+
+                        // Update editor content
+                        this.codeEditor.setCodeContent(code);
+                    }
+                }
+            } else {
+                // Fallback: just set the editor content
+                this.codeEditor.setCodeContent(code);
+            }
         } catch (error) {
             console.error('Error loading default example:', error);
             // Fallback to basic placeholder
-            this.codeEditor.setCodeContent(`// Enter your ${language} code here...`);
+            const fallbackCode = `// Enter your ${language} code here...`;
+            const defaultNames = {
+                'python': 'main.py',
+                'c': 'main.c',
+                'cpp': 'main.cpp',
+                'java': 'Main.java',
+                'eiffel': 'main.e'
+            };
+            const filename = defaultNames[language] || 'main.txt';
+
+            if (window.fileManager) {
+                if (window.fileManager.files.size === 0) {
+                    window.fileManager.createFile(filename, fallbackCode, 'default', true);
+                } else {
+                    const activeFile = window.fileManager.getActiveFile();
+                    if (activeFile) {
+                        activeFile.content = fallbackCode;
+                        this.codeEditor.setCodeContent(fallbackCode);
+                    }
+                }
+            } else {
+                this.codeEditor.setCodeContent(fallbackCode);
+            }
         }
     }
 
