@@ -7,16 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const headerContent = document.querySelector('.header-content');
     let lastScrollY = window.scrollY;
     let collapsed = false;
-    let lastToggle = 0;
     const COLLAPSE_CLASS = 'collapsed';
-    const THROTTLE_MS = 150;
 
     function setCollapsed(state) {
         if (collapsed === state) return;
-        const now = Date.now();
-        if (now - lastToggle < THROTTLE_MS) return;
         collapsed = state;
-        lastToggle = now;
         if (collapsed) {
             header.classList.add(COLLAPSE_CLASS);
         } else {
@@ -26,9 +21,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('scroll', function () {
         const currentY = window.scrollY;
-        if (currentY > 60) {
+        if (currentY > 120) {
             setCollapsed(true);
-        } else {
+        } else if (currentY < 60) {
             setCollapsed(false);
         }
         lastScrollY = currentY;
