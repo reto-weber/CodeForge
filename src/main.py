@@ -12,6 +12,8 @@ from fastapi.templating import Jinja2Templates
 # Home and favicon endpoints remain in main.py
 from fastapi import Cookie, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from controllers.admin_controller import router as admin_router
 from controllers.admin_controller import set_globals as set_admin_globals
@@ -98,6 +100,26 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
 )
+
+# Add HTTPS redirect middleware (only when SSL certificates are available)
+domain = os.environ.get("DOMAIN", "localhost")
+letsencrypt_cert_path = f"/etc/letsencrypt/live/{domain}/fullchain.pem"
+local_cert_path = os.path.join(os.path.dirname(__file__), "ssl", "server.crt")
+
+# Only add HTTPS redirect if we have valid certificates and a real domain
+if domain != "localhost" and os.path.exists(letsencrypt_cert_path):
+    app.add_middleware(HTTPSRedirectMiddleware)
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=[domain, f"www.{domain}", "localhost", "127.0.0.1"]
+    )
+elif os.path.exists(local_cert_path):
+    # For local development with self-signed certs, don't force HTTPS redirect
+    # but still add trusted host middleware
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["localhost", "127.0.0.1", "*.localhost"]
+    )
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -190,7 +212,45 @@ def background_cleanup():
 cleanup_thread = threading.Thread(target=background_cleanup, daemon=True)
 cleanup_thread.start()
 
+
+
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    
+    # Check for Let's Encrypt certificates first, then fallback to custom certs
+    domain = os.environ.get("DOMAIN", "localhost")
+    letsencrypt_cert_path = f"/etc/letsencrypt/live/{domain}/fullchain.pem"
+    letsencrypt_key_path = f"/etc/letsencrypt/live/{domain}/privkey.pem"
+    
+    # Fallback to local SSL directory
+    local_cert_path = os.path.join(os.path.dirname(__file__), "ssl", "server.crt")
+    local_key_path = os.path.join(os.path.dirname(__file__), "ssl", "server.key")
+    
+    # Check for Let's Encrypt certificates first
+    if os.path.exists(letsencrypt_cert_path) and os.path.exists(letsencrypt_key_path):
+        print(f"🔐 Starting server with Let's Encrypt HTTPS for domain: {domain}")
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=443,  # Standard HTTPS port
+            ssl_certfile=letsencrypt_cert_path,
+            ssl_keyfile=letsencrypt_key_path,
+            reload=False
+        )
+    elif os.path.exists(local_cert_path) and os.path.exists(local_key_path):
+        print("🔐 Starting server with local SSL certificates...")
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=8443,  # Custom HTTPS port for local certs
+            ssl_certfile=local_cert_path,
+            ssl_keyfile=local_key_path,
+            reload=False
+        )
+    else:
+        print("⚠️  No SSL certificates found. Starting with HTTP...")
+        print(f"   Let's Encrypt: {letsencrypt_cert_path}")
+        print(f"   Local certs:   {local_cert_path}")
+        print("   To setup Let's Encrypt, run: ./scripts/setup_letsencrypt.sh")
+        print("   To generate local certs, run: ./scripts/generate_ssl_certs.sh")
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

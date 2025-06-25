@@ -315,6 +315,7 @@ async def verify_code(
                     "Verification complete" if success else "Verification failed"
                 )
         except Exception as e:
+            print(e)
             if execution_id in active_processes:
                 proc = active_processes[execution_id]
                 proc.completed = True
