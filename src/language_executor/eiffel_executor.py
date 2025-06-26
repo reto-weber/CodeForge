@@ -218,6 +218,7 @@ class EiffelExecutor(LanguageExecutor):
         timeout: int = 60,
         main_file: Optional[str] = None,
     ) -> Tuple[bool, str, int]:
+        self.compile(code, session_id, main_file)
         # Handle both legacy string and new multi-file formats
         files, normalized_main_file = self._normalize_input(code, main_file)
 

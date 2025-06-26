@@ -14,6 +14,7 @@ class CodeCompilerApp {
         // Initialize core modules
         this.dom = new DOMElements();
         this.ui = new UIUtils(this.dom);
+        this.sessionManager = new SessionManager(this.dom, this.ui);
         this.codeEditor = new CodeEditorManager(this.dom);
         this.fileManager = new FileManager(this.dom, this.codeEditor);
         this.examplesManager = new ExamplesManager(this.dom, this.codeEditor, this.ui);
@@ -26,6 +27,7 @@ class CodeCompilerApp {
         window.examplesManager = this.examplesManager;
         window.fileManager = this.fileManager;
         window.libraryBrowser = this.libraryBrowser;
+        window.sessionManager = this.sessionManager;
 
         console.log('All modules initialized');
     }
@@ -53,6 +55,14 @@ class CodeCompilerApp {
         // Language change handling
         this.dom.language.addEventListener('change', async () => {
             console.log('Language changed to:', this.dom.language.value);
+            
+            // Clean up session containers when language changes (non-blocking)
+            try {
+                await this.sessionManager.cleanupOnLanguageChange();
+            } catch (error) {
+                console.warn('Session cleanup failed but continuing with language change:', error);
+            }
+            
             this.codeEditor.updateCodeMirrorMode();
             await this.examplesManager.setExampleCode(this.dom.language.value);
             this.examplesManager.updateExamplesDropdown();
@@ -95,6 +105,20 @@ class CodeCompilerApp {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.dom.outputSection && this.dom.outputSection.style.display !== 'none') {
                 this.ui.clearOutput();
+            }
+        });
+
+        // Handle page refresh/reload - cleanup sessions
+        window.addEventListener('beforeunload', () => {
+            // Use sendBeacon for reliable cleanup on page unload
+            this.sessionManager.cleanupOnRefreshBeacon();
+        });
+
+        // Handle page visibility change (more reliable than beforeunload)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                // Page is being hidden (possibly closed or minimized)
+                this.sessionManager.cleanupOnRefreshBeacon();
             }
         });
 
@@ -197,6 +221,9 @@ class CodeCompilerApp {
 
     async initialize() {
         console.log('Starting application initialization...');
+
+        // Initialize session management
+        this.sessionManager.startAutoRefresh(30000); // Refresh session info every 30 seconds
 
         // Check for files/lang in URL params (for shareable links)
         const params = new URLSearchParams(window.location.search);

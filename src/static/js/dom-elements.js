@@ -32,6 +32,10 @@ class DOMElements {
         this.closeOutputBtn = document.getElementById('close-output-btn');
         this.containerStatusEl = document.getElementById('container-status');
 
+        // Session management (optional elements)
+        this.sessionStatusEl = document.getElementById('session-status');
+        this.cleanupSessionBtn = document.getElementById('cleanup-session-btn');
+
         // Configuration (optional elements)
         this.showConfigBtn = document.getElementById('show-config-btn');
         this.configEditor = document.getElementById('config-editor');
@@ -52,6 +56,9 @@ class DOMElements {
         if (!this.configEditor) console.warn('Optional element config-editor not found');
         if (!this.configTextarea) console.warn('Optional element config-textarea not found');
         if (!this.saveConfigBtn) console.warn('Optional element save-config-btn not found');
+        if (!this.sessionStatusEl) console.warn('Optional element session-status not found');
+        if (!this.cleanupSessionBtn) console.warn('Optional element cleanup-session-btn not found');
+        if (!this.containerStatusEl) console.warn('Optional element container-status not found');
     }
 
     validateCriticalElements() {

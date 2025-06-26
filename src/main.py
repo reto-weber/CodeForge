@@ -14,13 +14,19 @@ from fastapi import Cookie, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from controllers.admin_controller import router as admin_router
 from controllers.admin_controller import set_globals as set_admin_globals
 from controllers.code_controller import router as code_router
 from controllers.code_controller import set_globals as set_code_globals
+from controllers.session_controller import router as session_router
+from controllers.session_controller import set_globals as set_session_globals
 from models import ActiveProcess, UserSession
 from container_manager import get_container_manager
+from starlette.middleware.sessions import SessionMiddleware
+
 
 # Global variables for process management
 active_processes: Dict[str, ActiveProcess] = {}
@@ -111,15 +117,15 @@ if domain != "localhost" and os.path.exists(letsencrypt_cert_path):
     app.add_middleware(HTTPSRedirectMiddleware)
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=[domain, f"www.{domain}", "localhost", "127.0.0.1"]
+        allowed_hosts=[domain, f"www.{domain}", "localhost", "127.0.0.1"],
     )
 elif os.path.exists(local_cert_path):
     # For local development with self-signed certs, don't force HTTPS redirect
     # but still add trusted host middleware
     app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["localhost", "127.0.0.1", "*.localhost"]
+        TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*.localhost"]
     )
+
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -132,10 +138,14 @@ templates = Jinja2Templates(directory=templates_dir)
 # Pass global state to controllers
 set_code_globals(active_processes, user_sessions, CONFIG, PROCESS_COUNTER)
 set_admin_globals(user_sessions, CONFIG)
+set_session_globals(user_sessions, CONFIG)
+
 
 # Include routers
 app.include_router(code_router)
 app.include_router(admin_router)
+app.include_router(session_router)
+app.include_router(session_router)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -150,14 +160,10 @@ async def get_home(request: Request, session_id: Optional[str] = Cookie(None)):
         session_id = new_session_id
     else:
         user_sessions[session_id].last_used = time.time()
-    languages = list(CONFIG["supported_languages"])
+    languages = CONFIG["supported_languages"]
     response = templates.TemplateResponse(
         "index.html",
-        {
-            "request": request,
-            "languages": CONFIG["supported_languages"],
-            "default_language": CONFIG["default_language"],
-        },
+        {"request": request, "languages": languages},
     )
     response.set_cookie(
         key="session_id", value=session_id, httponly=True, max_age=86400
@@ -212,20 +218,24 @@ def background_cleanup():
 cleanup_thread = threading.Thread(target=background_cleanup, daemon=True)
 cleanup_thread.start()
 
+# If you use SessionMiddleware, add it here:
+app.add_middleware(
+    SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET_KEY", "dev-secret")
+)
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     # Check for Let's Encrypt certificates first, then fallback to custom certs
     domain = os.environ.get("DOMAIN", "localhost")
     letsencrypt_cert_path = f"/etc/letsencrypt/live/{domain}/fullchain.pem"
     letsencrypt_key_path = f"/etc/letsencrypt/live/{domain}/privkey.pem"
-    
+
     # Fallback to local SSL directory
     local_cert_path = os.path.join(os.path.dirname(__file__), "ssl", "server.crt")
     local_key_path = os.path.join(os.path.dirname(__file__), "ssl", "server.key")
-    
+
     # Check for Let's Encrypt certificates first
     if os.path.exists(letsencrypt_cert_path) and os.path.exists(letsencrypt_key_path):
         print(f"🔐 Starting server with Let's Encrypt HTTPS for domain: {domain}")
@@ -235,7 +245,7 @@ if __name__ == "__main__":
             port=443,  # Standard HTTPS port
             ssl_certfile=letsencrypt_cert_path,
             ssl_keyfile=letsencrypt_key_path,
-            reload=False
+            reload=False,
         )
     elif os.path.exists(local_cert_path) and os.path.exists(local_key_path):
         print("🔐 Starting server with local SSL certificates...")
@@ -245,7 +255,7 @@ if __name__ == "__main__":
             port=8443,  # Custom HTTPS port for local certs
             ssl_certfile=local_cert_path,
             ssl_keyfile=local_key_path,
-            reload=False
+            reload=False,
         )
     else:
         print("⚠️  No SSL certificates found. Starting with HTTP...")

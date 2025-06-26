@@ -450,6 +450,22 @@ class FileManager {
         // Placeholder for context menu functionality
         console.log('Right-click on tab - context menu not implemented yet');
     }
+
+    // Disable all file editing actions (for student view)
+    disableEditing() {
+        // Remove or disable add, remove, rename file buttons
+        const addFileBtn = document.getElementById('add-file-btn');
+        if (addFileBtn) addFileBtn.style.display = 'none';
+        // Optionally, disable tab close buttons
+        const closeBtns = document.querySelectorAll('.file-tab .close-btn');
+        closeBtns.forEach(btn => btn.style.display = 'none');
+        // Prevent file renaming
+        this.dom.fileTabs.removeEventListener('dblclick', this.handleTabRename);
+        // Prevent file adding/removing via API
+        this.addFile = () => { };
+        this.removeFile = () => { };
+        this.renameFile = () => { };
+    }
 }
 
 // Export as global for backwards compatibility
