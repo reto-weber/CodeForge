@@ -1,5 +1,7 @@
 # CodeForge
 
+*This was produced using vibe coding (Copilot and VSCode). The eiffel/autoproof docker images were created manually.*
+
 A modern, Docker-integrated web-based code compiler and runner built with FastAPI that supports multiple programming languages with advanced features like execution cancellation, multi-file projects, and real-time status monitoring.
 
 ## 🚀 Features
