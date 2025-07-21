@@ -153,7 +153,7 @@ class EiffelExecutor(LanguageExecutor):
             creation_procedure, has_creation = self._get_creation_procedure(main_code)
 
             # Format ECF template with extracted information
-            if has_creation and creation_procedure and False:
+            if has_creation and creation_procedure:
                 self._put_ecf_to_container(session_id, creation_procedure, class_name)
             else:
                 # Use all_classes root if no specific creation procedure found
