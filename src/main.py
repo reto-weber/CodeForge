@@ -77,7 +77,7 @@ app = FastAPI(
 
     ## Features
 
-    * **Multi-language Support**: Compile and run Python, C, C++, and Java code
+    * **Multi-language Support**: Compile and run Python, C, C++, Eiffel, and Java code
     * **Docker Integration**: Secure code execution in isolated containers
     * **Session Management**: Track user sessions and container states
     * **Real-time Execution**: Monitor code execution with real-time status updates

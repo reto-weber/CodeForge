@@ -10,11 +10,11 @@ from config_manager import get_config_manager
 
 # Mapping of executor class names to actual classes
 _EXECUTOR_CLASSES: Dict[str, Type[LanguageExecutor]] = {
+    "EiffelExecutor": EiffelExecutor,
     "PythonExecutor": PythonExecutor,
     "CExecutor": CExecutor,
     "CppExecutor": CppExecutor,
     "JavaExecutor": JavaExecutor,
-    "EiffelExecutor": EiffelExecutor,
 }
 
 

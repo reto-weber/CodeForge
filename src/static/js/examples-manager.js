@@ -254,6 +254,8 @@ class ExamplesManager {
 
     getPlaceholderCode(language) {
         switch (language) {
+            case 'eiffel':
+                return '-- Enter your Eiffel code here...\nclass\n\tHELLO_WORLD\n\ncreate\n\tmake\n\nfeature\n\tmake\n\t\t\t-- Print hello world message\n\t\tdo\n\t\t\tprint ("Hello, World!%N")\n\t\tend\n\nend';
             case 'python':
                 return '# Enter your Python code here...\nprint("Hello, World!")';
             case 'c':
@@ -262,8 +264,6 @@ class ExamplesManager {
                 return '// Enter your C++ code here...\n#include <iostream>\n\nint main() {\n    std::cout << "Hello, World!" << std::endl;\n    return 0;\n}';
             case 'java':
                 return '// Enter your Java code here...\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}';
-            case 'eiffel':
-                return '-- Enter your Eiffel code here...\nclass\n\tHELLO_WORLD\n\ncreate\n\tmake\n\nfeature\n\tmake\n\t\t\t-- Print hello world message\n\t\tdo\n\t\t\tprint ("Hello, World!%N")\n\t\tend\n\nend';
             default:
                 return '// Enter your code here...';
         }

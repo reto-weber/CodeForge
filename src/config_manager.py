@@ -74,7 +74,7 @@ class ConfigManager:
 
     def get_default_language(self) -> str:
         """Get the default language."""
-        return self.languages_config.get("default_language", "python")
+        return self.languages_config.get("default_language", "eiffel")
 
     def get_executor_class_name(self, language: str) -> Optional[str]:
         """Get the executor class name for a language."""

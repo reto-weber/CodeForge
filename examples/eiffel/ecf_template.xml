@@ -14,7 +14,7 @@
 			<concurrency support="none"/>
 			<void_safety support="none"/>
 		</capability>
-		<precompile name="base_pre" location="/library/base/base.ecf" eifgens_location="../precomp"></precompile>
+		<precompile name="base_pre" location="/library/base/base.ecf" eifgens_location="/precomp"></precompile>
 		<!-- <library name="base_pre" location="\library\base\base.ecf" readonly="false"/> -->
 		<cluster name="autoproof_tests" location=".\">
 			<file_rule>

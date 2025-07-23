@@ -1,10 +1,4 @@
 {
-    "compilers": [
-        "python",
-        "c",
-        "cpp",
-        "java",
-        "eiffel"
-    ],
-    "default_language": "eiffel"
+  "compilers": ["eiffel", "python", "c", "cpp", "java"],
+  "default_language": "eiffel"
 }
