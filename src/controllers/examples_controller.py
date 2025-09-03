@@ -5,16 +5,15 @@ Handles loading and serving code examples.
 
 import json
 import os
+import csv
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-from models import CompilerConfig
-
 router = APIRouter()
 
 # These will be set by main.py through set_globals
-CONFIG: Optional[CompilerConfig] = None
+CONFIG: Optional[dict] = None
 
 
 def set_globals(config):
@@ -23,78 +22,61 @@ def set_globals(config):
     CONFIG = config
 
 
+def get_example_data():
+    # Try relative to project root
+    examples_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "examples")
+    if not os.path.exists(examples_path):
+        # Try absolute path from workspace root
+        abs_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "../../examples/")
+        )
+        print(f"Trying fallback abs_path: {abs_path}")
+        examples_path = abs_path
+    if not os.path.exists(examples_path):
+        return JSONResponse(
+            content={"error": f"Examples index not found at {examples_path}"},
+            status_code=404,
+        )
+
+    examples = []
+    for file_name in os.listdir(examples_path):
+        file_path = os.path.join(examples_path, file_name)
+        if os.path.isfile(file_path) and file_name.endswith(".csv"):
+            examples.append(file_name)
+
+    result = dict()
+    for example in examples:
+        with open(os.path.join(examples_path, example), "r", encoding="utf-8") as f:
+            language_name = example.removesuffix("_examples.csv")
+            print(language_name)
+            reader = csv.reader(f)
+            data = [x for x in reader][1:]
+            result[language_name] = {row[0]: row[1] for row in data}
+    return result
+
+
 @router.get("/examples", tags=["Examples"])
 async def get_examples():
     """Get the list of available code examples."""
-    try:
-        # Try relative to project root
-        examples_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "examples",
-            "examples_index.json",
-        )
-        print(f"Trying examples_path: {examples_path}")
-        if not os.path.exists(examples_path):
-            # Try absolute path from workspace root
-            abs_path = os.path.abspath(
-                os.path.join(
-                    os.path.dirname(__file__), "../../examples/examples_index.json"
-                )
-            )
-            print(f"Trying fallback abs_path: {abs_path}")
-            examples_path = abs_path
-        if not os.path.exists(examples_path):
-            return JSONResponse(
-                content={"error": f"Examples index not found at {examples_path}"},
-                status_code=404,
-            )
-
-        with open(examples_path, "r", encoding="utf-8") as f:
-            examples = json.load(f)
-        return JSONResponse(content=examples, status_code=200)
-    except Exception as e:
-        return JSONResponse(
-            content={"error": f"Failed to load examples: {str(e)}"}, status_code=500
-        )
+    result = get_example_data()
+    if isinstance(result, JSONResponse):
+        return result
+    return JSONResponse(content=result, status_code=200)
 
 
-@router.get("/examples/{language}/{filename}", tags=["Examples"])
-async def get_example_code(language: str, filename: str):
+@router.get("/examples/{language}/{name}", tags=["Examples"])
+async def get_example_code(language: str, name: str):
     """Get the source code of a specific example file."""
     try:
-        print(f"DEBUG: CONFIG is None: {CONFIG is None}")
-        if CONFIG is not None:
-            print(
-                f"DEBUG: CONFIG['supported_languages']: {CONFIG['supported_languages']}"
-            )
-            lang_supported = language in CONFIG["supported_languages"]
-            print(f"DEBUG: lang '{language}' in supported: {lang_supported}")
-        if CONFIG is None or language not in CONFIG["supported_languages"]:
-            raise HTTPException(
-                status_code=400, detail=f"Unsupported language: {language}"
-            )
-        examples_dir = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), "examples"
-        )
-        file_path = os.path.join(examples_dir, language, filename)
-        print(f"Trying file_path: {file_path}")
-        if not os.path.exists(file_path):
-            abs_path = os.path.abspath(
-                os.path.join(
-                    os.path.dirname(__file__), f"../../examples/{language}/{filename}"
-                )
-            )
-            print(f"Trying fallback abs_path: {abs_path}")
-            file_path = abs_path
-        if not os.path.exists(file_path):
-            return JSONResponse(
-                content={"error": f"Example file not found at {file_path}"},
-                status_code=404,
-            )
-        with open(file_path, "r", encoding="utf-8") as f:
-            code = f.read()
+        examples = get_example_data()
+        if isinstance(examples, JSONResponse):
+            return examples
         return JSONResponse(
-            content={"code": code, "filename": filename, "language": language},
+            content={
+                "url": examples[language][name],
+                "language": language,
+                "filename": name,
+            },
             status_code=200,
         )
     except FileNotFoundError:

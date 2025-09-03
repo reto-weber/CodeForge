@@ -22,26 +22,17 @@ class ExamplesManager {
     // Load available examples from server
     async loadAvailableExamples() {
         try {
-            console.log('=== loadAvailableExamples called ===');
-            console.log('Fetching /examples...');
             const response = await fetch('/examples');
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
-            console.log('Raw response data:', data);
 
             this.availableExamples = data;
-            console.log('Available examples stored:', this.availableExamples);
-            console.log('Available languages:', Object.keys(this.availableExamples));
 
-            console.log('Calling updateExamplesDropdown...');
             this.updateExamplesDropdown();
-            console.log('=== loadAvailableExamples complete ===');
         } catch (error) {
             console.error('Error loading examples:', error);
             console.error('Error stack:', error.stack);
@@ -50,10 +41,6 @@ class ExamplesManager {
 
     // Update examples dropdown based on selected language
     updateExamplesDropdown() {
-        console.log('=== updateExamplesDropdown called ===');
-        console.log('availableExamples object:', this.availableExamples);
-        console.log('languageSelect:', this.dom.language);
-        console.log('languageSelect.value:', this.dom.language ? this.dom.language.value : 'null');
 
         if (!this.dom.language) {
             console.error('languageSelect is null!');
@@ -61,11 +48,9 @@ class ExamplesManager {
         }
 
         const currentLanguage = this.dom.language.value;
-        console.log('Current language:', currentLanguage);
         const examples = this.availableExamples[currentLanguage] || {};
-        console.log('Examples for language:', examples);
-        console.log('Object.keys(examples):', Object.keys(examples));
-
+        
+        console.log(examples)
         if (!this.dom.examples) {
             console.error('examplesSelect is null!');
             return;
@@ -73,20 +58,14 @@ class ExamplesManager {
 
         // Clear existing options
         this.dom.examples.innerHTML = '<option value="">Select an example...</option>';
-        console.log('Cleared dropdown, current innerHTML:', this.dom.examples.innerHTML);
 
         // Add examples for current language
         Object.keys(examples).forEach(filename => {
-            const example = examples[filename];
             const option = document.createElement('option');
             option.value = filename;
-            option.textContent = `${example.title} - ${example.description}`;
+            option.textContent = `${filename}`;
             this.dom.examples.appendChild(option);
-            console.log('Added option:', filename, example.title);
         });
-
-        console.log('Final dropdown innerHTML:', this.dom.examples.innerHTML);
-        console.log('=== updateExamplesDropdown complete ===');
 
         // Update button state
         this.updateLoadExampleButton();
@@ -121,41 +100,11 @@ class ExamplesManager {
             const result = await response.json();
 
             if (response.ok) {
-                // If there's a file manager and we have files, update the active file
-                if (window.fileManager && window.fileManager.files.size > 0) {
-                    const activeFile = window.fileManager.getActiveFile();
-                    if (activeFile) {
-                        // Update the active file's content and name
-                        activeFile.content = result.code;
-                        activeFile.name = selectedExample;
-                        activeFile.extension = window.fileManager.getFileExtension(selectedExample);
-                        activeFile.language = window.fileManager.getLanguageFromExtension(activeFile.extension);
-
-                        // Update tab display
-                        const tabElement = document.querySelector(`[data-file-id="${activeFile.id}"]`);
-                        if (tabElement) {
-                            const tabName = tabElement.querySelector('.tab-name');
-                            if (tabName) {
-                                tabName.textContent = selectedExample;
-                            }
-                        }
-
-                        // Update editor content
-                        this.codeEditor.setCodeContent(result.code);
-                    }
-                } else if (window.fileManager && window.fileManager.files.size === 0) {
-                    // No files exist, create a new one
-                    window.fileManager.createFile(selectedExample, result.code, null, true);
+                // Navigate to the example URL
+                if (result.url) {
+                    window.location.href = result.url;
                 } else {
-                    // Fallback: just set the editor content
-                    this.codeEditor.setCodeContent(result.code);
-                }
-
-                this.ui.updateStatus(`Loaded example: ${selectedExample}`, true);
-
-                // Reset compilation paths when loading new code
-                if (window.codeExecution) {
-                    window.codeExecution.resetCompilation();
+                    this.ui.updateStatus('Error: No URL found for example', false);
                 }
             } else {
                 this.ui.updateStatus(`Error loading example: ${result.detail || result.error}`, false);

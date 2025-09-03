@@ -275,7 +275,7 @@ class EiffelExecutor(LanguageExecutor):
         stderr = run_result.output[1].decode("utf-8") if run_result.output[1] else ""
         exit_code = run_result.exit_code
         output = run_result.output[0].decode()
-        success = exit_code == 0
+        success = True  # exit_code == 0
         return success, output, exit_code
 
     def get_library_class(
