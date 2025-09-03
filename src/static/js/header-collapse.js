@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('scroll', function () {
         const currentY = window.scrollY;
-        if (currentY > 120) {
+        if (currentY > 160) {
             setCollapsed(true);
         } else if (currentY < 60) {
             setCollapsed(false);
