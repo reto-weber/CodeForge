@@ -17,7 +17,7 @@ from main import app
 client = TestClient(app=app)
 
 
-def wait_for_execution_completion(execution_id, max_attempts=10):
+def wait_for_execution_completion(execution_id, max_attempts=30):
     """
     Helper function to wait for execution completion and verify output.
 

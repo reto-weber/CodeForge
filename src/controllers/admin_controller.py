@@ -81,7 +81,7 @@ async def cleanup_old_containers(max_age_hours: int = Form(24)):
     dependencies=[Depends(require_api_key)],
 )
 async def get_config():
-    return CONFIG.dict() if CONFIG else None
+    return CONFIG
 
 
 @router.post(

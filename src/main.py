@@ -97,15 +97,12 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
-    contact={
-        "name": "Code Compiler API Support",
-        "url": "https://github.com/your-repo/code-compiler",
-    },
     license_info={
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT",
     },
 )
+
 
 # Add HTTPS redirect middleware (only when SSL certificates are available)
 domain = os.environ.get("DOMAIN", "localhost")
@@ -125,7 +122,6 @@ elif os.path.exists(local_cert_path):
     app.add_middleware(
         TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*.localhost"]
     )
-
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -224,8 +220,21 @@ app.add_middleware(
 )
 
 
+def log_config(uvicorn_log_config):
+    datefmt = "%Y-%m-%d %H:%M:%S"
+    formatters = uvicorn_log_config["formatters"]
+    formatters["default"]["fmt"] = "%(levelprefix)s [%(asctime)s] %(message)s asdf"
+    formatters["default"]["datefmt"] = datefmt
+    formatters["access"][
+        "fmt"
+    ] = '%(levelprefix)s [%(asctime)s] %(client_addr)s - "%(request_line)s" %(status_code)s'
+    formatters["access"]["datefmt"] = datefmt
+    return uvicorn_log_config
+
+
 if __name__ == "__main__":
     import uvicorn
+    from uvicorn.config import LOGGING_CONFIG
 
     # Check for Let's Encrypt certificates first, then fallback to custom certs
     domain = os.environ.get("DOMAIN", "localhost")
@@ -263,4 +272,10 @@ if __name__ == "__main__":
         print(f"   Local certs:   {local_cert_path}")
         print("   To setup Let's Encrypt, run: ./scripts/setup_letsencrypt.sh")
         print("   To generate local certs, run: ./scripts/generate_ssl_certs.sh")
-        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=8000,
+            reload=True,
+            log_config=log_config(LOGGING_CONFIG),
+        )

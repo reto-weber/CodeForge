@@ -61,7 +61,7 @@ class EiffelExecutor(LanguageExecutor):
             # Fallback: try absolute path from workspace root
             template_path = os.path.abspath(
                 os.path.join(
-                    os.path.dirname(__file__), "../../examples/eiffel/ecf_template.xml"
+                    os.path.dirname(__file__), "../../examples/ecf_template.xml"
                 )
             )
         if not os.path.exists(template_path):

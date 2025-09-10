@@ -2,7 +2,9 @@
 General API tests for basic endpoints, session management, examples, and admin functions.
 """
 
+import json
 from conftest import client
+from controllers.shared_utils import decompress_token
 
 
 def test_root():
@@ -120,10 +122,13 @@ def test_examples_list():
 
 
 def test_examples_file():
-    """Test retrieving specific example files."""
-    resp = client.get("/examples/python/hello_world.py")
+    resp = client.get("/examples/python/Hello%20World")
     assert resp.status_code == 200
-    assert "print" in resp.json().get("code", "")
+    data = resp.json()
+    data = json.loads(decompress_token(data["url"][4:]))
+    assert len(data["files"]) == 1
+    data = data["files"][0]
+    assert "print" in data["content"]
 
 
 def test_admin_get_config():

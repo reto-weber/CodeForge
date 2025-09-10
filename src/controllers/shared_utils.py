@@ -4,6 +4,8 @@ Shared utilities for controllers.
 
 import uuid
 import time
+import base64
+import gzip
 from typing import Dict, Optional
 from fastapi import Request, HTTPException
 from pydantic import ValidationError
@@ -99,3 +101,29 @@ def increment_process_counter() -> str:
     global PROCESS_COUNTER
     PROCESS_COUNTER += 1
     return str(PROCESS_COUNTER)
+
+
+def urlsafe_b64_to_bytes(s: str) -> bytes:
+    s = s.strip()
+    # restore URL-safe chars
+    s = s.replace("-", "+").replace("_", "/")
+    # pad to multiple of 4
+    pad = (-len(s)) % 4
+    if pad:
+        s += "=" * pad
+    return base64.b64decode(s)
+
+
+def decompress_token(token: str) -> str:
+    raw = urlsafe_b64_to_bytes(token)
+    # Try gzip first (primary path)
+    try:
+        decompressed = gzip.decompress(raw)
+        return decompressed.decode("utf-8")
+    except (OSError, gzip.BadGzipFile):
+        # Fallback: raw is UTF-8 bytes (from btoa(unescape(encodeURIComponent(str))))
+        try:
+            return raw.decode("utf-8")
+        except UnicodeDecodeError:
+            # As a last resort, return latin-1 decoded string to preserve bytes
+            return raw.decode("latin-1")

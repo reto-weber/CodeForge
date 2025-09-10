@@ -48,7 +48,6 @@ def get_example_data():
     for example in examples:
         with open(os.path.join(examples_path, example), "r", encoding="utf-8") as f:
             language_name = example.removesuffix("_examples.csv")
-            print(language_name)
             reader = csv.reader(f)
             data = [x for x in reader][1:]
             result[language_name] = {row[0]: row[1] for row in data}

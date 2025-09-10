@@ -6,12 +6,16 @@ Covers all endpoints and tests compile-then-run workflow.
 import sys
 import os
 import time
+import json
 from fastapi.testclient import TestClient
+
+from src.controllers.shared_utils import decompress_token
 
 # Add src directory to Python path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from main import app
+from controllers.shared_utils import decompress_token
 
 client = TestClient(app)
 
@@ -97,9 +101,13 @@ def test_examples_list():
 
 
 def test_examples_file():
-    resp = client.get("/examples/python/hello_world.py")
+    resp = client.get("/examples/python/Hello%20World")
     assert resp.status_code == 200
-    assert "print" in resp.json().get("code", "")
+    data = resp.json()
+    data = json.loads(decompress_token(data["url"][4:]))
+    assert len(data["files"]) == 1
+    data = data["files"][0]
+    assert "print" in data["content"]
 
 
 def test_admin_get_config():
