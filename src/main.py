@@ -134,13 +134,12 @@ templates = Jinja2Templates(directory=templates_dir)
 # Pass global state to controllers
 set_code_globals(active_processes, user_sessions, CONFIG, PROCESS_COUNTER)
 set_admin_globals(user_sessions, CONFIG)
-set_session_globals(user_sessions, CONFIG)
+set_session_globals(user_sessions)
 
 
 # Include routers
 app.include_router(code_router)
 app.include_router(admin_router)
-app.include_router(session_router)
 app.include_router(session_router)
 
 

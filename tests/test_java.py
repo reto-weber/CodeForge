@@ -7,20 +7,25 @@ from conftest import wait_for_execution_completion, create_session_client
 
 def test_compile_and_run_java():
     """Test Java compile-then-run workflow."""
-    java_code = """
+    files = [
+        {
+            "name": "HelloWorld.java",
+            "content": """
 public class HelloWorld {
     public static void main(String[] args) {
         System.out.println("Hello, World!");
     }
 }
-"""
+""",
+        }
+    ]
     # Use session client to maintain cookies
     session_client = create_session_client()
 
     # Compile first
     compile_resp = session_client.post(
         "/compile",
-        data={"language": "java", "code": java_code},
+        json={"language": "java", "files": files, "main_file": "HelloWorld.java"},
     )
     assert compile_resp.status_code == 200
     compile_data = compile_resp.json()
@@ -30,7 +35,7 @@ public class HelloWorld {
     # Now run using the same session (cookies preserved)
     run_resp = session_client.post(
         "/run",
-        data={"language": "java", "code": java_code},
+        json={"language": "java", "files": files, "main_file": "HelloWorld.java"},
     )
     print(f"Run response status: {run_resp.status_code}")
     print(f"Run response content: {run_resp.text}")
@@ -51,7 +56,10 @@ public class HelloWorld {
 
 def test_java_calculator():
     """Test Java code with a simple calculator."""
-    java_code = """
+    files = [
+        {
+            "name": "Calculator.java",
+            "content": """
 public class Calculator {
     public static void main(String[] args) {
         int a = 10;
@@ -67,14 +75,16 @@ public class Calculator {
         System.out.println("Quotient: " + quotient);
     }
 }
-"""
+""",
+        }
+    ]
     # Use session client to maintain cookies
     session_client = create_session_client()
 
     # Compile first
     compile_resp = session_client.post(
         "/compile",
-        data={"language": "java", "code": java_code},
+        json={"language": "java", "files": files, "main_file": "Calculator.java"},
     )
     assert compile_resp.status_code == 200
     compile_data = compile_resp.json()
@@ -83,7 +93,7 @@ public class Calculator {
     # Now run using the same session (cookies preserved)
     run_resp = session_client.post(
         "/run",
-        data={"language": "java", "code": java_code},
+        json={"language": "java", "files": files, "main_file": "Calculator.java"},
     )
     assert run_resp.status_code == 200
     run_data = run_resp.json()

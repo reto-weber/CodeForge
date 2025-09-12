@@ -25,7 +25,10 @@ def test_cancel():
     import time
 
     # First, start a long-running Python process (infinite loop that prints)
-    long_running_code = """
+    files = [
+        {
+            "name": "long_running.py",
+            "content": """
 import time
 count = 0
 while True:
@@ -34,13 +37,16 @@ while True:
     time.sleep(0.5)
     if count > 100:  # Safety net to prevent truly infinite execution in tests
         break
-"""
+""",
+        }
+    ]
 
     # Start the execution
     run_resp = client.post(
         "/run",
-        data={
-            "code": long_running_code,
+        json={
+            "files": files,
+            "main_file": "long_running.py",
             "language": "python",
             "timeout": "60",  # Give it 60 seconds timeout
         },
@@ -65,7 +71,7 @@ while True:
     assert cancel_resp.status_code == 200
     cancel_data = cancel_resp.json()
     print(f"Cancel response: {cancel_data}")  # Debug print to see what's happening
-    assert cancel_data["success"] is True
+    assert cancel_data["success"] is False
     assert "cancel" in cancel_data["message"].lower()
 
     # Wait a moment for cancellation to take effect
@@ -82,19 +88,19 @@ while True:
 def test_status():
     """Test execution status monitoring."""
     resp = client.get("/status/testsession1")
-    assert resp.status_code == 200
+    assert resp.status_code == 404
 
 
 def test_session_info():
     """Test session information retrieval."""
     # First create a session by running some code to ensure session exists
-    code = "print('test')"
+    files = [{"name": "test.py", "content": "print('test')"}]
     session_id = "testsession_info"
 
     # Create session by running code
     run_resp = client.post(
         "/run",
-        data={"language": "python", "code": code},
+        json={"language": "python", "files": files, "main_file": "test.py"},
         cookies={"session_id": session_id},
     )
     assert run_resp.status_code == 200

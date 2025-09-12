@@ -72,28 +72,20 @@ def safe_decode(val):
 async def parse_request_data(request: Request) -> dict:
     """Parse request data from either JSON (multi-file) or Form (legacy) format."""
     content_type = request.headers.get("content-type", "")
-
-    if "application/json" in content_type:
-        # New multi-file format
-        try:
-            json_data = await request.json()
-            multi_file_request = MultiFileRequest(**json_data)
-            return {
-                "is_multi_file": True,
-                "language": multi_file_request.language,
-                "files": multi_file_request.files,
-                "main_file": multi_file_request.main_file,
-                "timeout": getattr(multi_file_request, "timeout", 30),
-                "file_path": getattr(multi_file_request, "file_path", None),
-                "output_path": getattr(multi_file_request, "output_path", None),
-            }
-        except (ValidationError, ValueError) as e:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid JSON request: {str(e)}"
-            )
-    else:
-        # Legacy form format - handled by FastAPI form parsing
-        return {"is_multi_file": False}
+    # New multi-file format
+    try:
+        json_data = await request.json()
+        multi_file_request = MultiFileRequest(**json_data)
+        return {
+            "language": multi_file_request.language,
+            "files": multi_file_request.files,
+            "main_file": multi_file_request.main_file,
+            "timeout": getattr(multi_file_request, "timeout", 30),
+            "file_path": getattr(multi_file_request, "file_path", None),
+            "output_path": getattr(multi_file_request, "output_path", None),
+        }
+    except (ValidationError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON request: {str(e)}")
 
 
 def increment_process_counter() -> str:

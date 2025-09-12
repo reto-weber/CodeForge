@@ -8,7 +8,10 @@ import time
 
 def test_compile_and_run_eiffel():
     """Test Eiffel compile-then-run workflow."""
-    code = """class
+    files = [
+        {
+            "name": "hello_world.e",
+            "content": """class
     HELLO_WORLD
 
 create
@@ -21,11 +24,13 @@ feature
             print ("Hello, Eiffel!%N")
         end
 
-end"""
+end""",
+        }
+    ]
     session_client = create_session_client()
     compile_resp = session_client.post(
         "/compile",
-        data={"language": "eiffel", "code": code},
+        json={"language": "eiffel", "files": files, "main_file": "hello_world.e"},
     )
     assert compile_resp.status_code == 200
     compile_data = compile_resp.json()
@@ -35,7 +40,7 @@ end"""
     # Now run using the same session (cookies preserved)
     run_resp = session_client.post(
         "/run",
-        data={"language": "eiffel", "code": code},
+        json={"language": "eiffel", "files": files, "main_file": "hello_world.e"},
     )
     assert run_resp.status_code == 200
     run_data = run_resp.json()
@@ -57,7 +62,10 @@ end"""
 
 def test_eiffel_with_variables():
     """Test Eiffel code with variables and calculations."""
-    code = """class
+    files = [
+        {
+            "name": "calculator.e",
+            "content": """class
     CALCULATOR
 
 create
@@ -77,11 +85,13 @@ feature
             print ("Result: " + res.out + "%N")
         end
 
-end"""
+end""",
+        }
+    ]
     session_client = create_session_client()
     compile_resp = session_client.post(
         "/compile",
-        data={"language": "eiffel", "code": code},
+        json={"language": "eiffel", "files": files, "main_file": "calculator.e"},
     )
     assert compile_resp.status_code == 200
     compile_data = compile_resp.json()
@@ -90,7 +100,7 @@ end"""
     # Now run using the same session (cookies preserved)
     run_resp = session_client.post(
         "/run",
-        data={"language": "eiffel", "code": code},
+        json={"language": "eiffel", "files": files, "main_file": "calculator.e"},
     )
     assert run_resp.status_code == 200
     run_data = run_resp.json()
@@ -109,7 +119,10 @@ end"""
 def test_eiffel_compilation_performance_with_reused_container():
     """Test that compiling Eiffel code twice is much faster the second time due to
     container reuse."""
-    eiffel_code = """class
+    files = [
+        {
+            "name": "performance_test.e",
+            "content": """class
     PERFORMANCE_TEST
 
 create
@@ -122,7 +135,9 @@ feature
             print ("Performance test completed!%N")
         end
 
-end"""
+end""",
+        }
+    ]
 
     # Use session client to maintain cookies and session
     session_client = create_session_client()
@@ -133,7 +148,7 @@ end"""
 
     compile_resp_1 = session_client.post(
         "/compile",
-        data={"language": "eiffel", "code": eiffel_code},
+        json={"language": "eiffel", "files": files, "main_file": "performance_test.e"},
     )
 
     end_time_1 = time.time()
@@ -149,7 +164,7 @@ end"""
 
     compile_resp_2 = session_client.post(
         "/compile",
-        data={"language": "eiffel", "code": eiffel_code},
+        json={"language": "eiffel", "files": files, "main_file": "performance_test.e"},
     )
 
     end_time_2 = time.time()
@@ -185,7 +200,10 @@ end"""
 
 def test_eiffel_compile_run_workflow_with_performance():
     """Test the complete compile-then-run workflow and verify container reuse performance."""
-    eiffel_code = """class
+    files = [
+        {
+            "name": "workflow_test.e",
+            "content": """class
     WORKFLOW_TEST
 
 create
@@ -198,7 +216,9 @@ feature
             print ("Workflow test: Hello, Eiffel!%N")
         end
 
-end"""
+end""",
+        }
+    ]
 
     session_client = create_session_client()
 
@@ -207,7 +227,7 @@ end"""
     compile_start = time.time()
     compile_resp = session_client.post(
         "/compile",
-        data={"language": "eiffel", "code": eiffel_code},
+        json={"language": "eiffel", "files": files, "main_file": "workflow_test.e"},
     )
     compile_time = time.time() - compile_start
 
@@ -220,7 +240,7 @@ end"""
     run_start = time.time()
     run_resp = session_client.post(
         "/run",
-        data={"language": "eiffel", "code": eiffel_code},
+        json={"language": "eiffel", "files": files, "main_file": "workflow_test.e"},
     )
     run_time = time.time() - run_start
 
@@ -257,7 +277,10 @@ end"""
 
 def test_eiffel_verification_success():
     """Test Eiffel code verification with a successful check."""
-    code = """class
+    files = [
+        {
+            "name": "hello_world.e",
+            "content": """class
     HELLO_WORLD
 
 create
@@ -269,13 +292,15 @@ feature
             check True end
         end
 
-end"""
+end""",
+        }
+    ]
     session_client = create_session_client()
 
     # Test verification endpoint
     verify_resp = session_client.post(
         "/verify",
-        data={"language": "eiffel", "code": code},
+        json={"language": "eiffel", "files": files, "main_file": "hello_world.e"},
     )
     assert verify_resp.status_code == 200
     verify_data = verify_resp.json()
@@ -291,12 +316,14 @@ end"""
     assert not (
         "#fdd" in status_data["output"]
     ), f"Verification should succeed, but got: {status_data.get('output', '')}"
-    print("✅ Verification successful for 'check True'")
 
 
 def test_eiffel_verification_failure():
     """Test Eiffel code verification with a failing check."""
-    code = """class
+    files = [
+        {
+            "name": "hello_world.e",
+            "content": """class
     HELLO_WORLD
 
 create
@@ -308,13 +335,15 @@ feature
             check False end
         end
 
-end"""
+end""",
+        }
+    ]
     session_client = create_session_client()
 
     # Test verification endpoint
     verify_resp = session_client.post(
         "/verify",
-        data={"language": "eiffel", "code": code},
+        json={"language": "eiffel", "files": files, "main_file": "hello_world.e"},
     )
     assert verify_resp.status_code == 200
     verify_data = verify_resp.json()
@@ -336,13 +365,13 @@ end"""
 
 def test_eiffel_verification_unsupported_language():
     """Test that verification endpoint rejects non-Eiffel languages."""
-    code = """print("Hello, World!")"""
+    files = [{"name": "hello_world.py", "content": """print("Hello, World!")"""}]
     session_client = create_session_client()
 
     # Test verification endpoint with Python code
     verify_resp = session_client.post(
         "/verify",
-        data={"language": "python", "code": code},
+        json={"language": "python", "files": files, "main_file": "hello_world.py"},
     )
     assert verify_resp.status_code == 400  # Should return bad request
     verify_data = verify_resp.json()

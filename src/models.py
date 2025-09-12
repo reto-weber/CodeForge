@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
 
@@ -8,8 +9,9 @@ class FileInfo(BaseModel):
 
 
 class CompileRequest(BaseModel):
-    code: str = Field(..., description="Source code to compile")
+    files: List[FileInfo] = Field(..., description="List of files")
     language: str = Field(..., description="Programming language")
+    main_file: str = Field(..., description="Main file to compile")
 
 
 class MultiFileRequest(BaseModel):
@@ -90,3 +92,101 @@ class ActiveProcess(BaseModel):
 class CompilerConfig(BaseModel):
     compilers: List[str] = Field(..., description="Names of programming languages")
     default_language: str = Field(..., description="Default language for the editor")
+
+
+class ProgrammingLanguages(Enum):
+    c = "c"
+    cpp = "cpp"
+    python = "python"
+    java = "java"
+    eiffel = "eiffel"
+
+
+class CodeExamples(BaseModel):
+    java: Dict[str, str]
+    cpp: Dict[str, str]
+    python: Dict[str, str]
+    eiffel: Dict[str, str]
+    c: Dict[str, str]
+
+
+class SingleExample(BaseModel):
+    url: str
+    language: str
+    filename: str
+
+
+class CompileResult(BaseModel):
+    success: bool
+    message: str
+    output: str
+    output_path: Optional[str] = None
+
+
+class Message(BaseModel):
+    message: str
+
+
+class ExecutionResult(BaseModel):
+    success: bool
+    message: str
+    output: str
+    execution_id: str
+    session_id: str
+    started: bool
+
+
+class ProcessStatusResponse(BaseModel):
+    running: bool
+    completed: bool
+    elapsed_time: float
+    timeout: int
+    cancelled: bool
+
+
+class ProcessFinishedResponse(BaseModel):
+    running: bool
+    completed: bool
+    elapsed_time: float
+    cancelled: bool
+    success: bool
+    message: str
+    output: str
+    exit_code: int
+    operation_type: str
+
+
+class SuccessMessage(BaseModel):
+    success: bool
+    message: str
+
+
+class RunningInformation(BaseModel):
+    running: bool
+    message: str
+
+
+class LibraryInformation(BaseModel):
+    success: bool
+    class_name: str
+    mapped_class_name: str
+    source_code: str
+    language: str
+    message: str
+
+
+class EiffelLibraryNameMappingBase(BaseModel):
+    success: bool
+    count: int
+    message: str
+
+
+class EiffelLibraryNameMapping(EiffelLibraryNameMappingBase):
+    mappings: Dict[str, str]
+
+
+class SessionInformation(BaseModel):
+    session_created: float
+    session_last_used: float
+    session_id: Optional[str] = None
+    container: Optional[Dict[str, Any]] = None

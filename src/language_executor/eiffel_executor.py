@@ -311,7 +311,8 @@ class EiffelExecutor(LanguageExecutor):
 
         # Read the content of temp.txt
         read_result = self.container_mgr.read_file_from_container(session_id, temp_file)
-        if read_result is None:
-            return False, f"Failed to read {temp_file} from container"
+
+        if read_result is None or read_result == "":
+            return False, f"Class {class_name} not found."
 
         return True, read_result

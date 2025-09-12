@@ -17,7 +17,20 @@ from fastapi.responses import JSONResponse
 
 from container_manager import get_container_manager
 from language_executor.factory import get_executor_by_name
-from models import ActiveProcess, CompilerConfig, UserSession
+from models import (
+    ActiveProcess,
+    CompileRequest,
+    FileInfo,
+    SuccessMessage,
+    CompileResult,
+    CompilerConfig,
+    CompileResult,
+    ExecutionResult,
+    Message,
+    ProcessFinishedResponse,
+    ProcessStatusResponse,
+    RunningInformation,
+)
 from .shared_utils import (
     get_or_create_session_id,
     update_session_activity,
@@ -39,82 +52,63 @@ def set_globals(processes, config):
     CONFIG = config
 
 
-@router.post("/compile", tags=["Code Execution"])
+@router.post(
+    "/compile",
+    tags=["Code Execution"],
+    response_model=CompileResult,
+    responses={422: {"model": CompileResult}},
+)
 async def compile_code(
-    request: Request,
-    code: str = Form(None, description="Source code to compile"),
-    language: str = Form(None, description="Programming language"),
-    version: Optional[str] = Form(None),
+    request_data: CompileRequest,
     session_id: Optional[str] = Cookie(None),
 ):
     """Compile source code."""
     try:
+        language = request_data.language
+        main_file = request_data.main_file
+        files = request_data.files
         # Parse request data
-        request_data = await parse_request_data(request)
         session_id = get_or_create_session_id(session_id)
         update_session_activity(session_id)
 
-        if request_data["is_multi_file"]:
-            # Multi-file request
-            language = request_data["language"]
-            files = request_data["files"]
-            main_file = request_data["main_file"]
+        # Convert Pydantic FileInfo models to executor FileInfo objects
+        from language_executor.base import FileInfo as ExecutorFileInfo
 
-            # Convert Pydantic FileInfo models to executor FileInfo objects
-            from language_executor.base import FileInfo as ExecutorFileInfo
+        file_objects = [ExecutorFileInfo(f.name, f.content) for f in files]
 
-            file_objects = [ExecutorFileInfo(f.name, f.content) for f in files]
+        # Pass all files to the executor
+        executor = get_executor_by_name(language)
+        success, output, output_path = executor.compile(
+            file_objects, session_id, main_file
+        )
+        response_data = CompileResult(
+            success=success,
+            message=("Compilation successful" if success else "Compilation failed"),
+            output=output,
+            output_path=output_path,
+        )
 
-            # Pass all files to the executor
-            exec_version = version if version is not None else ""
-            executor = get_executor_by_name(language, exec_version)
-            success, output, output_path = executor.compile(
-                file_objects, session_id, main_file
-            )
-        else:
-            # Legacy form request
-            if not code or not language:
-                raise HTTPException(
-                    status_code=400, detail="Code and language are required"
-                )
-
-            # Single file compilation (legacy)
-            exec_version = version if version is not None else ""
-            executor = get_executor_by_name(language, exec_version)
-            success, output, output_path = executor.compile(code, session_id)
-
-        response_data = {
-            "success": success,
-            "message": ("Compilation successful" if success else "Compilation failed"),
-            "output": output,
-            "file_path": None,
-            "output_path": output_path,
-        }
-
-        response = JSONResponse(content=response_data, status_code=200)
+        response = JSONResponse(
+            content=response_data.model_dump(), status_code=200 if success else 422
+        )
         response.set_cookie(
             key="session_id", value=session_id, httponly=True, max_age=86400
         )
         return response
     except Exception as e:
-        response_data = {
-            "success": False,
-            "message": f"Error during compilation: {str(e)}",
-            "output": "",
-            "file_path": None,
-            "output_path": None,
-        }
-        response = JSONResponse(content=response_data, status_code=500)
+        response = JSONResponse(
+            status_code=500,
+            content=Message(message=f"Error during compilation: {str(e)}").model_dump(),
+        )
         response.set_cookie(
             key="session_id", value=session_id, httponly=True, max_age=86400
         )
         return response
 
 
-@router.post("/run", tags=["Code Execution"])
+@router.post("/run", tags=["Code Execution"], response_model=ExecutionResult)
 async def run_code(
     request: Request,
-    code: str = Form(None),
     language: str = Form(None),
     timeout: int = Form(30),
     version: str = Form(None),
@@ -124,48 +118,29 @@ async def run_code(
     # Parse request data
     request_data = await parse_request_data(request)
 
-    if request_data["is_multi_file"]:
-        # Multi-file request
-        language = request_data["language"]
-        files = request_data["files"]
-        main_file = request_data["main_file"]
-        timeout = request_data.get("timeout", 30)
+    # Multi-file request
+    language = request_data["language"]
+    files = request_data["files"]
+    main_file = request_data["main_file"]
+    timeout = request_data.get("timeout", 30)
 
-        # Find the main file content
-        main_file_content = None
-        for file_info in files:
-            if file_info.name == main_file:
-                main_file_content = file_info.content
-                break
+    # Find the main file content
+    main_file_content = None
+    for file_info in files:
+        if file_info.name == main_file:
+            main_file_content = file_info.content
+            break
 
-        if main_file_content is None:
-            raise HTTPException(
-                status_code=400, detail=f"Main file '{main_file}' not found"
-            )
-
-        code = main_file_content
-    else:
-        # Legacy form request
-        if not code or not language:
-            raise HTTPException(
-                status_code=400, detail="Code and language are required"
-            )
-        files = None
-        main_file = None
+    if main_file_content is None:
+        raise HTTPException(
+            status_code=400, detail=f"Main file '{main_file}' not found"
+        )
 
     session_id = get_or_create_session_id(session_id)
     execution_id = increment_process_counter()
     update_session_activity(session_id)
 
     if CONFIG is None or language not in CONFIG["supported_languages"]:
-        print(f"DEBUG: CONFIG is None: {CONFIG is None}")
-        if CONFIG is not None:
-            print(
-                f"DEBUG: CONFIG['supported_languages']: {CONFIG['supported_languages']}"
-            )
-            print(
-                f"DEBUG: language '{language}' in CONFIG['supported_languages']: {language in CONFIG['supported_languages']}"
-            )
         raise HTTPException(status_code=400, detail=f"Unsupported language: {language}")
 
     active_processes[execution_id] = ActiveProcess(
@@ -176,23 +151,20 @@ async def run_code(
         timeout=timeout,
         language=language,
         operation_type="run",
+        exit_code=None,
     )
 
     def run_in_container():
         try:
             executor = get_executor_by_name(language, version)
 
-            if request_data["is_multi_file"]:
-                # Multi-file execution
-                from language_executor.base import FileInfo as ExecutorFileInfo
+            # Multi-file execution
+            from language_executor.base import FileInfo as ExecutorFileInfo
 
-                file_objects = [ExecutorFileInfo(f.name, f.content) for f in files]
-                success, output, exit_code = executor.execute(
-                    file_objects, session_id, timeout, main_file
-                )
-            else:
-                # Legacy single file execution
-                success, output, exit_code = executor.execute(code, session_id, timeout)
+            file_objects = [ExecutorFileInfo(f.name, f.content) for f in files]
+            success, output, exit_code = executor.execute(
+                file_objects, session_id, timeout, main_file
+            )
 
             if execution_id in active_processes:
                 proc = active_processes[execution_id]
@@ -214,23 +186,23 @@ async def run_code(
     thread.daemon = True
     thread.start()
 
-    response_data = {
-        "success": True,
-        "message": "Execution started in container",
-        "output": "",
-        "execution_id": execution_id,
-        "session_id": session_id,
-        "started": True,
-    }
+    response_data = ExecutionResult(
+        success=True,
+        message="Execution started in container",
+        output="",
+        execution_id=execution_id,
+        session_id=session_id,
+        started=True,
+    )
 
-    response = JSONResponse(content=response_data, status_code=200)
+    response = JSONResponse(content=response_data.model_dump(), status_code=200)
     response.set_cookie(
         key="session_id", value=session_id, httponly=True, max_age=86400
     )
     return response
 
 
-@router.post("/verify", tags=["Code Execution"])
+@router.post("/verify", tags=["Code Execution"], response_model=ExecutionResult)
 async def verify_code(
     request: Request,
     code: str = Form(None, description="Source code to verify"),
@@ -245,32 +217,25 @@ async def verify_code(
     # Parse request data
     request_data = await parse_request_data(request)
 
-    if request_data["is_multi_file"]:
-        # Multi-file request
-        language = request_data["language"]
-        files = request_data["files"]
-        main_file = request_data["main_file"]
-        timeout = request_data.get("timeout", 30)
+    # Multi-file request
+    language = request_data["language"]
+    files = request_data["files"]
+    main_file = request_data["main_file"]
+    timeout = request_data.get("timeout", 30)
 
-        # Find the main file content
-        main_file_content = None
-        for file_info in files:
-            if file_info.name == main_file:
-                main_file_content = file_info.content
-                break
+    # Find the main file content
+    main_file_content = None
+    for file_info in files:
+        if file_info.name == main_file:
+            main_file_content = file_info.content
+            break
 
-        if main_file_content is None:
-            raise HTTPException(
-                status_code=400, detail=f"Main file '{main_file}' not found"
-            )
+    if main_file_content is None:
+        raise HTTPException(
+            status_code=400, detail=f"Main file '{main_file}' not found"
+        )
 
-        code = main_file_content
-    else:
-        # Legacy form request
-        if not code or not language:
-            raise HTTPException(
-                status_code=400, detail="Code and language are required"
-            )
+    code = main_file_content
 
     session_id = get_or_create_session_id(session_id)
     execution_id = increment_process_counter()
@@ -328,28 +293,35 @@ async def verify_code(
     thread.daemon = True
     thread.start()
 
-    response_data = {
-        "success": True,
-        "message": "Verification started in container",
-        "output": "",
-        "execution_id": execution_id,
-        "session_id": session_id,
-        "started": True,
-    }
+    response_data = ExecutionResult(
+        success=True,
+        message="Verification started in container",
+        output="",
+        execution_id=execution_id,
+        session_id=session_id,
+        started=True,
+    )
 
-    response = JSONResponse(content=response_data, status_code=200)
+    response = JSONResponse(content=response_data.model_dump(), status_code=200)
     response.set_cookie(
         key="session_id", value=session_id, httponly=True, max_age=86400
     )
     return response
 
 
-@router.post("/cancel", tags=["Code Execution"])
+@router.post(
+    "/cancel",
+    tags=["Code Execution"],
+    response_model=SuccessMessage,
+    responses={404: {"model": SuccessMessage}, 500: {"model": SuccessMessage}},
+)
 async def cancel_execution(execution_id: str = Form(...)):
     """Cancel a running execution."""
     if execution_id not in active_processes:
         return JSONResponse(
-            content={"success": False, "message": "Execution not found"},
+            content=SuccessMessage(
+                success=False, message="Execution not found"
+            ).model_dump(),
             status_code=404,
         )
     proc = active_processes[execution_id]
@@ -361,41 +333,58 @@ async def cancel_execution(execution_id: str = Form(...)):
         proc.completed = True
         proc.success = False
         proc.message = "Execution cancelled by user"
-        return {"success": cancelled, "message": proc.message}
+        return JSONResponse(
+            content=SuccessMessage(success=cancelled, message=proc.message).model_dump()
+        )
     except Exception as e:
-        return {"success": False, "message": f"Error cancelling execution: {str(e)}"}
+        return JSONResponse(
+            content=SuccessMessage(
+                success=False, message=f"Error cancelling execution: {str(e)}"
+            ).model_dump(),
+            status_code=500,
+        )
 
 
-@router.get("/status/{execution_id}", tags=["Code Execution"])
+@router.get(
+    "/status/{execution_id}",
+    tags=["Code Execution"],
+    response_model=ProcessFinishedResponse | ProcessStatusResponse,
+    responses={404: {"model": RunningInformation}},
+)
 async def get_execution_status(execution_id: str):
     """Get the status of a running execution."""
     if execution_id not in active_processes:
-        return {"running": False, "message": "Execution not found or completed"}
+        return JSONResponse(
+            content=RunningInformation(
+                running=False, message="Execution not found or completed"
+            ).model_dump(),
+            status_code=404,
+        )
 
     process_info = active_processes[execution_id]
     elapsed_time = time.time() - process_info.start_time
 
     if process_info.completed:
-        final_result = {
-            "running": False,
-            "completed": True,
-            "success": (
+        final_result = ProcessFinishedResponse(
+            running=False,
+            completed=True,
+            success=(
                 process_info.success if process_info.success is not None else False
             ),
-            "message": process_info.message or "Execution completed",
-            "output": process_info.output or "",
-            "exit_code": process_info.exit_code,
-            "elapsed_time": round(elapsed_time, 2),
-            "cancelled": process_info.cancelled,
-            "operation_type": process_info.operation_type,
-        }
+            message=process_info.message or "Execution completed",
+            output=process_info.output or "",
+            exit_code=process_info.exit_code or -1,
+            elapsed_time=round(elapsed_time, 2),
+            cancelled=process_info.cancelled,
+            operation_type=process_info.operation_type,
+        )
         del active_processes[execution_id]
         return final_result
 
-    return {
-        "running": True,
-        "completed": False,
-        "elapsed_time": round(elapsed_time, 2),
-        "timeout": process_info.timeout,
-        "cancelled": process_info.cancelled,
-    }
+    return ProcessStatusResponse(
+        running=True,
+        completed=False,
+        elapsed_time=round(elapsed_time, 2),
+        timeout=process_info.timeout,
+        cancelled=process_info.cancelled,
+    )

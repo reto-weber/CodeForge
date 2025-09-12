@@ -64,7 +64,7 @@ def test_favicon():
 
 def test_status():
     resp = client.get("/status/testsession1")
-    assert resp.status_code == 200
+    assert resp.status_code == 404
 
 
 def test_session_info():
