@@ -274,7 +274,7 @@ class EiffelExecutor(LanguageExecutor):
         stdout = run_result.output[0].decode("utf-8") if run_result.output[0] else ""
         stderr = run_result.output[1].decode("utf-8") if run_result.output[1] else ""
         exit_code = run_result.exit_code
-        output = run_result.output[0].decode()
+        output = stdout if exit_code == 0 else stderr
         success = True  # exit_code == 0
         return success, output, exit_code
 

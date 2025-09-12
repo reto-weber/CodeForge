@@ -123,7 +123,7 @@ class SessionManager {
         try {
             console.log('Cleaning up session containers for language change...');
             
-            const response = await fetch('/session/cleanup-on-language-change', {
+            const response = await fetch('/session/cleanup', {
                 method: 'POST',
                 credentials: 'same-origin'
             });
@@ -147,7 +147,7 @@ class SessionManager {
     // Clean up session on page refresh
     async cleanupOnRefresh() {
         try {
-            const response = await fetch('/session/cleanup-on-refresh', {
+            const response = await fetch('/session/cleanup', {
                 method: 'POST',
                 credentials: 'same-origin'
             });
@@ -169,7 +169,7 @@ class SessionManager {
         try {
             // Use sendBeacon for reliable cleanup when page is unloading
             const data = new FormData();
-            navigator.sendBeacon('/session/cleanup-on-refresh', data);
+            navigator.sendBeacon('/session/cleanup', data);
             console.log('Session cleanup beacon sent for page refresh');
         } catch (error) {
             console.error('Error sending session cleanup beacon:', error);
